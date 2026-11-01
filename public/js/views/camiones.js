@@ -1,12 +1,48 @@
-// public/js/views/camiones.js - Vista dedicada de Camiones & Mantenimiento (Harden)
+// public/js/views/camiones.js - Vista dedicada de Camiones & Mantenimiento (Harden + Filtros + Modal Edición)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
-import { openModal, closeModal } from '../app.js';
+import { openModal, closeModal, showToast } from '../app.js';
+import { icons } from '../icons.js';
+
+let flotaCache = [];
 
 export async function initCamionesView() {
   bindFormNuevoCamion();
   bindFormMantenimiento();
+  bindFormEditarCamion();
+  bindFiltrosCamiones();
   await renderCamiones();
+}
+
+function bindFiltrosCamiones() {
+  const searchInput = document.getElementById('filtro-camiones');
+  const estadoSelect = document.getElementById('filtro-estado-camiones');
+
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.dataset.bound = 'true';
+    searchInput.addEventListener('input', () => aplicarFiltros());
+  }
+
+  if (estadoSelect && !estadoSelect.dataset.bound) {
+    estadoSelect.dataset.bound = 'true';
+    estadoSelect.addEventListener('change', () => aplicarFiltros());
+  }
+}
+
+function aplicarFiltros() {
+  const search = (document.getElementById('filtro-camiones')?.value || '').toLowerCase().trim();
+  const estado = (document.getElementById('filtro-estado-camiones')?.value || '').trim();
+
+  const filtrados = flotaCache.filter(c => {
+    const matchSearch = !search || 
+      c.patente.toLowerCase().includes(search) || 
+      c.marca.toLowerCase().includes(search) || 
+      c.modelo.toLowerCase().includes(search);
+    const matchEstado = !estado || c.estado === estado;
+    return matchSearch && matchEstado;
+  });
+
+  renderTablaCamiones(filtrados);
 }
 
 function bindFormNuevoCamion() {
@@ -27,22 +63,22 @@ function bindFormNuevoCamion() {
 
       try {
         const payload = {
-          patente: document.getElementById('camion-patente').value,
-          marca: document.getElementById('camion-marca').value,
-          modelo: document.getElementById('camion-modelo').value,
+          patente: document.getElementById('camion-patente').value.toUpperCase().trim(),
+          marca: document.getElementById('camion-marca').value.trim(),
+          modelo: document.getElementById('camion-modelo').value.trim(),
           anio: Number(document.getElementById('camion-anio').value),
           capacidad_kg: Number(document.getElementById('camion-capacidad').value),
           kilometraje_actual: Number(document.getElementById('camion-km').value || 0),
-          foto_url: document.getElementById('camion-foto').value
+          foto_url: document.getElementById('camion-foto').value.trim()
         };
 
         await api.crearCamion(payload);
         e.target.reset();
         msg.className = 'success-box';
         msg.textContent = '✓ Camión registrado con éxito (Índice único verificado en motor).';
+        showToast(`Camión ${payload.patente} incorporado exitosamente.`);
         setTimeout(() => {
-          const modal = document.getElementById('modal-camion');
-          if (modal) modal.classList.remove('active');
+          closeModal('modal-camion');
         }, 800);
         await renderCamiones();
         await renderKPIs();
@@ -81,20 +117,20 @@ function bindFormMantenimiento() {
       }
 
       const payload = {
-        tipo: document.getElementById('mant-tipo').value,
+        tipo: document.getElementById('mant-tipo').value.trim(),
         costo: Number(document.getElementById('mant-costo').value),
         km_servicio: Number(document.getElementById('mant-km').value),
-        taller: document.getElementById('mant-taller').value
+        taller: document.getElementById('mant-taller').value.trim()
       };
 
       try {
         await api.registrarMantenimiento(patente, payload);
         e.target.reset();
         msg.className = 'success-box';
-        msg.textContent = '✓ Mantenimiento asentado exitosamente en hoja de vida ($push atómico).';
+        msg.textContent = '✓ Mantenimiento asentado exitosamente con operador $push atómico.';
+        showToast(`Mantenimiento registrado para ${patente}.`);
         setTimeout(() => {
-          const modal = document.getElementById('modal-mant');
-          if (modal) modal.classList.remove('active');
+          closeModal('modal-mant');
         }, 800);
         await renderCamiones();
         await renderKPIs();
@@ -103,17 +139,59 @@ function bindFormMantenimiento() {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Asentar en Hoja de Vida Embebida';
+          submitBtn.textContent = 'Asentar en Hoja de Vida';
         }
       }
     });
   }
 }
 
+function bindFormEditarCamion() {
+  const formEdit = document.getElementById('form-editar-camion');
+  if (formEdit && !formEdit.dataset.bound) {
+    formEdit.dataset.bound = 'true';
+    formEdit.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const patente = document.getElementById('edit-camion-patente').value;
+      const nuevoKm = Number(document.getElementById('edit-camion-km').value);
+      const nuevoEstado = document.getElementById('edit-camion-estado').value;
+      const msg = document.getElementById('msg-edit-camion');
+      msg.textContent = '';
+      msg.className = 'error-box';
+
+      try {
+        await api.actualizarCamion(patente, {
+          kilometraje_actual: nuevoKm,
+          estado: nuevoEstado
+        });
+        showToast(`Camión ${patente} actualizado.`);
+        closeModal('modal-editar-camion');
+        await renderCamiones();
+        await renderKPIs();
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  }
+}
+
 export async function renderCamiones() {
-  const camiones = await api.getCamiones();
-  renderTablaCamiones(camiones);
-  actualizarSelectorMantenimiento(camiones);
+  const tbody = document.getElementById('camiones-body');
+  if (tbody && !flotaCache.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="padding: 24px;">
+          <div class="skeleton-line" style="width: 100%;"></div>
+          <div class="skeleton-line" style="width: 90%;"></div>
+          <div class="skeleton-line" style="width: 95%;"></div>
+        </td>
+      </tr>
+    `;
+  }
+
+  flotaCache = await api.getCamiones();
+  aplicarFiltros();
+  actualizarSelectorMantenimiento(flotaCache);
 }
 
 function renderTablaCamiones(camiones) {
@@ -125,8 +203,8 @@ function renderTablaCamiones(camiones) {
     tbody.innerHTML = `
       <tr>
         <td colspan="8" class="empty-state">
-          <div class="empty-state-icon">🚚</div>
-          <div class="empty-state-text">No hay camiones registrados en la base de datos. Utilice el formulario superior para incorporar unidades.</div>
+          <div class="empty-state-icon" style="color:var(--text-muted);">${icons.truck}</div>
+          <div class="empty-state-text">No se encontraron camiones registrados o coincidentes con los filtros aplicados.</div>
         </td>
       </tr>
     `;
@@ -144,7 +222,7 @@ function renderTablaCamiones(camiones) {
     } else {
       mantCellHtml = `
         <button type="button" class="badge-mant-summary btn-ver-mant" data-patente="${c.patente}" title="Ver historial detallado de ${c.patente}">
-          <span>🔧</span>
+          ${icons.wrench}
           <strong>${count} ${count === 1 ? 'servicio' : 'servicios'}</strong>
           <span style="color:var(--blue-text); font-family:var(--font-mono); font-size:11px;">($${totalCosto.toLocaleString()})</span>
         </button>
@@ -153,7 +231,7 @@ function renderTablaCamiones(camiones) {
 
     const fotoImg = c.foto_url 
       ? `<img src="${c.foto_url}" class="truck-thumb" alt="${c.patente}" loading="lazy">`
-      : `<div class="truck-thumb" style="display:flex; align-items:center; justify-content:center; font-size:1.2rem;">🚛</div>`;
+      : `<div class="truck-thumb" style="display:flex; align-items:center; justify-content:center; color:var(--text-muted);">${icons.truck}</div>`;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -165,8 +243,14 @@ function renderTablaCamiones(camiones) {
       <td><span class="badge-${c.estado}">${c.estado}</span></td>
       <td>${mantCellHtml}</td>
       <td style="white-space: nowrap;">
-        <button class="btn-secondary btn-edit-camion" style="padding: 4px 8px; font-size: 11px;">✏️ Editar</button>
-        <button class="btn-danger btn-del-camion" style="padding: 4px 8px; font-size: 11px;">🗑️ Eliminar</button>
+        <button class="btn-secondary btn-with-icon btn-edit-camion" style="padding: 4px 8px; font-size: 11px;">
+          ${icons.edit}
+          Editar
+        </button>
+        <button class="btn-danger btn-with-icon btn-del-camion" style="padding: 4px 8px; font-size: 11px;">
+          ${icons.trash}
+          Eliminar
+        </button>
       </td>
     `;
 
@@ -175,7 +259,7 @@ function renderTablaCamiones(camiones) {
       btnVerMant.addEventListener('click', () => mostrarHistorialMantenimiento(c));
     }
 
-    tr.querySelector('.btn-edit-camion').addEventListener('click', () => editarCamion(c));
+    tr.querySelector('.btn-edit-camion').addEventListener('click', () => abrirModalEdicion(c));
     tr.querySelector('.btn-del-camion').addEventListener('click', () => borrarCamion(c.patente));
     tbody.appendChild(tr);
   });
@@ -190,7 +274,7 @@ function mostrarHistorialMantenimiento(camion) {
   const container = document.getElementById('modal-historial-content');
   const btnNuevo = document.getElementById('btn-modal-historial-nuevo');
 
-  if (titulo) titulo.textContent = `🔧 Hoja de Vida: ${camion.patente}`;
+  if (titulo) titulo.textContent = `Hoja de Vida: ${camion.patente}`;
   if (subtitulo) subtitulo.textContent = `${camion.marca} ${camion.modelo} (${camion.anio}) — Odómetro actual: ${camion.kilometraje_actual.toLocaleString()} km`;
 
   const mantenimientos = camion.mantenimientos || [];
@@ -198,12 +282,12 @@ function mostrarHistorialMantenimiento(camion) {
     if (mantenimientos.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 24px 12px; color: var(--text-muted);">
-          <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+          <div style="margin-bottom: 8px;">${icons.wrench}</div>
           <div>No se registran intervenciones de mantenimiento para esta unidad.</div>
         </div>
       `;
     } else {
-      const itemsHtml = mantenimientos.map((m, idx) => {
+      const itemsHtml = mantenimientos.map((m) => {
         const fechaStr = m.fecha ? new Date(m.fecha).toLocaleDateString() : 'Fecha no especificada';
         return `
           <div class="mant-item-card">
@@ -238,33 +322,34 @@ function mostrarHistorialMantenimiento(camion) {
   openModal('modal-historial-mant');
 }
 
-async function editarCamion(c) {
-  const nuevoKm = prompt(`Actualizar odómetro para camión ${c.patente} (Actual: ${c.kilometraje_actual} km):`, c.kilometraje_actual);
-  if (nuevoKm === null) return;
+function abrirModalEdicion(c) {
+  const patenteInput = document.getElementById('edit-camion-patente');
+  const kmInput = document.getElementById('edit-camion-km');
+  const estadoSelect = document.getElementById('edit-camion-estado');
+  const title = document.getElementById('modal-edit-camion-title');
+  const msg = document.getElementById('msg-edit-camion');
 
-  const nuevoEstado = prompt(`Actualizar estado (disponible / en_mantenimiento / en_viaje):`, c.estado);
-  if (nuevoEstado === null) return;
-
-  try {
-    await api.actualizarCamion(c.patente, {
-      kilometraje_actual: Number(nuevoKm),
-      estado: nuevoEstado.trim()
-    });
-    await renderCamiones();
-    await renderKPIs();
-  } catch (err) {
-    alert(err.message);
+  if (patenteInput) patenteInput.value = c.patente;
+  if (kmInput) kmInput.value = c.kilometraje_actual;
+  if (estadoSelect) estadoSelect.value = c.estado;
+  if (title) title.textContent = `Actualizar Camión ${c.patente}`;
+  if (msg) {
+    msg.textContent = '';
+    msg.className = 'error-box';
   }
+
+  openModal('modal-editar-camion');
 }
 
 async function borrarCamion(patente) {
   if (!confirm(`¿Está seguro de eliminar el camión con patente ${patente}?`)) return;
   try {
     await api.eliminarCamion(patente);
+    showToast(`Camión ${patente} eliminado.`);
     await renderCamiones();
     await renderKPIs();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 }
 

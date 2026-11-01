@@ -11,24 +11,44 @@
   <!-- Header Global -->
   <header class="app-header">
     <div class="brand-title">
-      <span style="font-size: 1.6rem;">🚛</span>
+      <span style="display: flex; align-items: center; color: var(--blue-text);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17h4V5H2v12h3m5 0a2 2 0 1 0 4 0m-9 0a2 2 0 1 0 4 0m9-5h4l3 3v4h-3m-4 0a2 2 0 1 0 4 0"/></svg>
+      </span>
       <div>
         <h1>Fleet & Logistics Tracker</h1>
         <span class="sub">Arquitectura Modular · MongoDB Engine & Spec-First</span>
       </div>
     </div>
     <div>
-      <button id="btn-refresh" class="btn-secondary">🔄 Actualizar Datos</button>
+      <button id="btn-refresh" class="btn-secondary btn-with-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+        Actualizar Datos
+      </button>
     </div>
   </header>
 
   <!-- Navegación por Vistas Separadas (Tabs) -->
   <nav class="view-tabs-bar">
-    <button class="view-tab active" data-tab="dashboard">📊 Dashboard Resumen</button>
-    <button class="view-tab" data-tab="viajes">🛣️ Despacho & Viajes</button>
-    <button class="view-tab" data-tab="camiones">🚚 Camiones & Flota</button>
-    <button class="view-tab" data-tab="choferes">👤 Choferes & Nómina</button>
-    <button class="view-tab" data-tab="stats">📈 Analítica Aggregation</button>
+    <button class="view-tab active btn-with-icon" data-tab="dashboard">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      Dashboard Resumen
+    </button>
+    <button class="view-tab btn-with-icon" data-tab="viajes">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+      Despacho & Viajes
+    </button>
+    <button class="view-tab btn-with-icon" data-tab="camiones">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17h4V5H2v12h3m5 0a2 2 0 1 0 4 0m-9 0a2 2 0 1 0 4 0m9-5h4l3 3v4h-3m-4 0a2 2 0 1 0 4 0"/></svg>
+      Camiones & Flota
+    </button>
+    <button class="view-tab btn-with-icon" data-tab="choferes">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Choferes & Nómina
+    </button>
+    <button class="view-tab btn-with-icon" data-tab="stats">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      Analítica Aggregation
+    </button>
   </nav>
 
   <main class="main-container">
@@ -60,8 +80,11 @@
       <div class="grid-2col">
         <div class="card">
           <div class="panel-header">
-            <h2>🛣️ Viajes en Tránsito Inmediato</h2>
-            <button id="btn-open-modal-viaje-dash" class="btn-primary-action">+ Nuevo Viaje</button>
+            <h2>Viajes en Tránsito Inmediato</h2>
+            <button id="btn-open-modal-viaje-dash" class="btn-primary-action btn-with-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo Viaje
+            </button>
           </div>
           <p style="color: var(--text-muted); font-size: 13px;">Unidades actualmente en ruta hacia destino.</p>
           <div class="table-responsive">
@@ -81,9 +104,13 @@
         </div>
 
         <div class="card">
-          <h2>📈 Inversión en Mantenimiento por Marca</h2>
+          <h2>Inversión en Mantenimiento por Marca</h2>
           <p style="color: var(--text-muted); font-size: 13px;">Pipeline <code>$unwind</code> y <code>$group</code> en MongoDB.</p>
-          <div id="gastos-tabla">Cargando métricas...</div>
+          <div id="gastos-tabla">
+            <div class="skeleton-line" style="width: 75%;"></div>
+            <div class="skeleton-line" style="width: 50%;"></div>
+            <div class="skeleton-line" style="width: 90%;"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -95,10 +122,13 @@
       <div class="card">
         <div class="panel-header">
           <div>
-            <h2>🛣️ Consola de Despacho y Monitoreo de Viajes</h2>
+            <h2>Consola de Despacho y Monitoreo de Viajes</h2>
             <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Unidades en curso y control de entrega en destino.</p>
           </div>
-          <button id="btn-open-modal-viaje" class="btn-primary-action">🚀 Despachar Nuevo Viaje</button>
+          <button id="btn-open-modal-viaje" class="btn-primary-action btn-with-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Despachar Nuevo Viaje
+          </button>
         </div>
 
         <div class="table-responsive" style="margin-top: 16px;">
@@ -125,16 +155,36 @@
       <div class="card">
         <div class="panel-header">
           <div>
-            <h2>🚚 Inventario General de Unidades y Mantenimientos Embebidos</h2>
+            <h2>Inventario General de Unidades y Mantenimientos Embebidos</h2>
             <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Flota pesada, odometría en tiempo real y hojas de vida en MongoDB.</p>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button id="btn-open-modal-mant" class="btn-secondary">🔧 Asentar Mantenimiento</button>
-            <button id="btn-open-modal-camion" class="btn-primary-action">➕ Nuevo Camión</button>
+            <button id="btn-open-modal-mant" class="btn-secondary btn-with-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              Asentar Mantenimiento
+            </button>
+            <button id="btn-open-modal-camion" class="btn-primary-action btn-with-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo Camión
+            </button>
           </div>
         </div>
 
-        <div class="table-responsive" style="margin-top: 16px;">
+        <!-- Toolbar de Filtros y Búsqueda en Vivo -->
+        <div class="table-toolbar">
+          <div class="search-input-group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="filtro-camiones" placeholder="Buscar por patente, marca o modelo...">
+          </div>
+          <select id="filtro-estado-camiones" class="filter-select">
+            <option value="">Todos los Estados</option>
+            <option value="disponible">Disponible</option>
+            <option value="en_mantenimiento">En Mantenimiento</option>
+            <option value="en_viaje">En Viaje</option>
+          </select>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 10px;">
           <table>
             <thead>
               <tr>
@@ -144,7 +194,7 @@
                 <th>Capacidad</th>
                 <th>Odómetro Actual</th>
                 <th>Estado</th>
-                <th>Historial de Mantenimientos Embebidos</th>
+                <th>Historial Mantenimientos</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -161,13 +211,29 @@
       <div class="card">
         <div class="panel-header">
           <div>
-            <h2>👤 Nómina de Choferes y Licencias Profesionales</h2>
+            <h2>Nómina de Choferes y Licencias Profesionales</h2>
             <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Registro de conductores, categorías de habilitación (E1, E2) y vigencias.</p>
           </div>
-          <button id="btn-open-modal-chofer" class="btn-primary-action">➕ Registrar Chofer</button>
+          <button id="btn-open-modal-chofer" class="btn-primary-action btn-with-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Registrar Chofer
+          </button>
         </div>
 
-        <div class="table-responsive" style="margin-top: 16px;">
+        <!-- Toolbar de Filtros y Búsqueda en Vivo -->
+        <div class="table-toolbar">
+          <div class="search-input-group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="filtro-choferes" placeholder="Buscar por DNI, nombre o teléfono...">
+          </div>
+          <select id="filtro-estado-choferes" class="filter-select">
+            <option value="">Todos los Estados</option>
+            <option value="disponible">Disponible</option>
+            <option value="en_viaje">En Viaje</option>
+          </select>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 10px;">
           <table>
             <thead>
               <tr>
@@ -211,7 +277,7 @@
   <div id="modal-viaje" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>🚀 Despachar Nuevo Viaje</h3>
+        <h3>Despachar Nuevo Viaje</h3>
         <button class="modal-close" data-close="modal-viaje">&times;</button>
       </div>
       <form id="form-viaje">
@@ -256,7 +322,7 @@
   <div id="modal-camion" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>➕ Registrar Nuevo Camión en Flota</h3>
+        <h3>Registrar Nuevo Camión en Flota</h3>
         <button class="modal-close" data-close="modal-camion">&times;</button>
       </div>
       <form id="form-camion">
@@ -306,7 +372,7 @@
   <div id="modal-mant" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>🔧 Asentar Mantenimiento Preventivo ($push)</h3>
+        <h3>Asentar Mantenimiento Preventivo ($push)</h3>
         <button class="modal-close" data-close="modal-mant">&times;</button>
       </div>
       <form id="form-mant">
@@ -343,7 +409,7 @@
   <div id="modal-chofer" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>👤 Registrar Nuevo Chofer en Nómina</h3>
+        <h3>Registrar Nuevo Chofer en Nómina</h3>
         <button class="modal-close" data-close="modal-chofer">&times;</button>
       </div>
       <form id="form-chofer">
@@ -386,7 +452,7 @@
     <div class="modal-card" style="max-width: 680px;">
       <div class="modal-header">
         <div>
-          <h3 id="modal-historial-titulo" style="margin: 0;">🔧 Historial de Mantenimientos</h3>
+          <h3 id="modal-historial-titulo" style="margin: 0;">Historial de Mantenimientos</h3>
           <p id="modal-historial-subtitulo" style="color: var(--text-muted); font-size: 12px; margin: 4px 0 0 0;"></p>
         </div>
         <button class="modal-close" data-close="modal-historial-mant">&times;</button>
@@ -400,6 +466,89 @@
       </div>
     </div>
   </div>
+
+  <!-- 6. Modal Editar Camión (Harden / No más prompt()) -->
+  <div id="modal-editar-camion" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="modal-edit-camion-title">Actualizar Camión</h3>
+        <button class="modal-close" data-close="modal-editar-camion">&times;</button>
+      </div>
+      <form id="form-editar-camion">
+        <input type="hidden" id="edit-camion-patente">
+        <label>Odómetro Actual (km):</label>
+        <input type="number" id="edit-camion-km" min="0" required>
+
+        <label>Estado Operativo:</label>
+        <select id="edit-camion-estado" required>
+          <option value="disponible">Disponible</option>
+          <option value="en_mantenimiento">En Mantenimiento</option>
+          <option value="en_viaje">En Viaje</option>
+        </select>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-secondary" data-close="modal-editar-camion">Cancelar</button>
+          <button type="submit" class="btn-primary-action" style="width: auto;">Guardar Cambios</button>
+        </div>
+        <div id="msg-edit-camion" class="error-box"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. Modal Editar Chofer (Harden / No más prompt()) -->
+  <div id="modal-editar-chofer" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="modal-edit-chofer-title">Actualizar Chofer</h3>
+        <button class="modal-close" data-close="modal-editar-chofer">&times;</button>
+      </div>
+      <form id="form-editar-chofer">
+        <input type="hidden" id="edit-chofer-dni">
+        <label>Teléfono de Contacto:</label>
+        <input type="text" id="edit-chofer-tel" required>
+
+        <label>Estado en Nómina:</label>
+        <select id="edit-chofer-estado" required>
+          <option value="disponible">Disponible</option>
+          <option value="asignado">Asignado</option>
+          <option value="descanso">Descanso</option>
+        </select>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-secondary" data-close="modal-editar-chofer">Cancelar</button>
+          <button type="submit" class="btn-primary-action" style="width: auto;">Guardar Cambios</button>
+        </div>
+        <div id="msg-edit-chofer" class="error-box"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. Modal Finalizar Viaje (Harden / No más prompt()) -->
+  <div id="modal-finalizar-viaje" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="modal-fin-viaje-title">Asentar Llegada de Viaje</h3>
+        <button class="modal-close" data-close="modal-finalizar-viaje">&times;</button>
+      </div>
+      <form id="form-finalizar-viaje">
+        <input type="hidden" id="fin-viaje-id">
+        <label>Odómetro de Llegada (km):</label>
+        <input type="number" id="fin-viaje-km" min="0" required>
+
+        <label>Observaciones de Entrega:</label>
+        <input type="text" id="fin-viaje-obs" value="Entrega en conformidad.">
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-secondary" data-close="modal-finalizar-viaje">Cancelar</button>
+          <button type="submit" class="btn-primary-action" style="width: auto;">Registrar Llegada</button>
+        </div>
+        <div id="msg-fin-viaje" class="error-box"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contenedor Flotante de Toasts -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Orquestador Principal ES Modules -->
   <script type="module" src="js/app.js"></script>
