@@ -3,7 +3,7 @@ const { getDB } = require('../config/db');
 
 const router = express.Router();
 
-// 1. Listar choferes (con filtro opcional de estado)
+// 1. Listar choferes (con filtro opcional de estado y paginación defensiva)
 router.get('/', async (req, res) => {
   try {
     const db = getDB();
@@ -11,7 +11,15 @@ router.get('/', async (req, res) => {
     if (req.query.estado) {
       filter.estado = req.query.estado;
     }
-    const choferes = await db.collection('choferes').find(filter).sort({ nombre: 1 }).toArray();
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+
+    const choferes = await db.collection('choferes')
+      .find(filter)
+      .sort({ nombre: 1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
     res.json(choferes);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -4,7 +4,7 @@ const { getDB } = require('../config/db');
 
 const router = express.Router();
 
-// Listar viajes
+// Listar viajes (con paginación defensiva para proteger memoria)
 router.get('/', async (req, res) => {
   try {
     const db = getDB();
@@ -12,7 +12,15 @@ router.get('/', async (req, res) => {
     if (req.query.estado) {
       filter.estado = req.query.estado;
     }
-    const viajes = await db.collection('viajes').find(filter).sort({ fecha_salida: -1 }).toArray();
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+
+    const viajes = await db.collection('viajes')
+      .find(filter)
+      .sort({ fecha_salida: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
     res.json(viajes);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -133,14 +141,12 @@ router.put('/:id/finalizar', async (req, res) => {
       }
     );
 
-    // Liberar recursos y actualizar odómetro del camión
+    // Liberar recursos y actualizar odómetro del camión con invariante monótono ($max)
     await db.collection('camiones').updateOne(
       { patente: viaje.camion_patente },
       {
-        $set: {
-          estado: 'disponible',
-          kilometraje_actual: kmFin
-        }
+        $set: { estado: 'disponible' },
+        $max: { kilometraje_actual: kmFin }
       }
     );
     await db.collection('choferes').updateOne(
