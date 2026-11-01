@@ -26,7 +26,8 @@
   <nav class="view-tabs-bar">
     <button class="view-tab active" data-tab="dashboard">📊 Dashboard Resumen</button>
     <button class="view-tab" data-tab="viajes">🛣️ Despacho & Viajes</button>
-    <button class="view-tab" data-tab="flota">🚚 Flota & Mantenimiento</button>
+    <button class="view-tab" data-tab="camiones">🚚 Camiones & Flota</button>
+    <button class="view-tab" data-tab="choferes">👤 Choferes & Nómina</button>
     <button class="view-tab" data-tab="stats">📈 Analítica Aggregation</button>
   </nav>
 
@@ -115,7 +116,7 @@
           <h2>Reglas Operativas de Viajes</h2>
           <ul style="color: #8b949e; font-size: 13px; line-height: 1.6; padding-left: 18px;">
             <li><strong>Validación de Peso:</strong> No se permite despachar una carga que exceda la <code>capacidad_kg</code> de la unidad asignada.</li>
-            <li><strong>Mutación Concurrente:</strong> El camión pasa a <code>en_viaje</code> y el chofer a <code>asignado</code> de forma atómica.</li>
+            <li><strong>Atomicidad Concurrente:</strong> La asignación del camión y chofer se ejecuta mediante Compare-and-Swap atómico en el motor MongoDB.</li>
             <li><strong>Odometría Real:</strong> Al finalizar el viaje, el odómetro de llegada computa los kilómetros y libera ambos recursos a <code>disponible</code>.</li>
           </ul>
         </div>
@@ -123,9 +124,9 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- VISTA 3: FLOTA & MANTENIMIENTO PREVENTIVO -->
+    <!-- VISTA 3: CAMIONES & FLOTA (Página dedicada) -->
     <!-- ========================================== -->
-    <section id="view-flota" class="tab-view">
+    <section id="view-camiones" class="tab-view">
       <div class="grid-2col">
         <!-- Alta de Camión (Create) -->
         <div class="card">
@@ -149,63 +150,25 @@
           </form>
         </div>
 
-        <!-- Alta de Chofer (Create) -->
+        <!-- Registrar Mantenimiento Preventivo -->
         <div class="card">
-          <h2>➕ Registrar Nuevo Chofer</h2>
-          <form id="form-chofer">
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
-              <input type="text" id="chofer-dni" placeholder="DNI (ej: 40123456)" required>
-              <input type="text" id="chofer-nombre" placeholder="Nombre completo" required>
+          <h2>🔧 Asentar Mantenimiento ($push Embebido)</h2>
+          <form id="form-mant">
+            <label style="color:#8b949e; font-size:12px;">Camión a intervenir:</label>
+            <select id="mant-camion" required></select>
+
+            <input type="text" id="mant-tipo" placeholder="Tipo de Servicio (ej: Cambio de Frenos y Filtros)" required>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <input type="number" id="mant-costo" placeholder="Costo ($)" required>
+              <input type="number" id="mant-km" placeholder="Km al momento del servicio" required>
             </div>
-            <input type="text" id="chofer-tel" placeholder="Teléfono de contacto" required>
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
-              <input type="text" id="chofer-lic-cat" placeholder="Categoría (ej: E1)" value="E1" required>
-              <input type="date" id="chofer-lic-venc" placeholder="Vencimiento" required>
-            </div>
-            <input type="text" id="chofer-foto" placeholder="URL Foto (ej: /images/choferes/horacio.jpg)">
-            <button type="submit">Guardar Chofer</button>
-            <div id="msg-chofer" class="error-box"></div>
+
+            <input type="text" id="mant-taller" placeholder="Taller / Concesionario Oficial">
+            <button type="submit">Asentar en Hoja de Vida Embebida</button>
+            <div id="msg-mant" class="error-box"></div>
           </form>
         </div>
-      </div>
-
-      <!-- Registrar Mantenimiento Preventivo -->
-      <div class="card">
-        <h2>🔧 Registrar Mantenimiento Preventivo ($push Embebido)</h2>
-        <form id="form-mant">
-          <label style="color:#8b949e; font-size:12px;">Camión a intervenir:</label>
-          <select id="mant-camion" required></select>
-
-          <input type="text" id="mant-tipo" placeholder="Tipo de Servicio (ej: Cambio de Frenos y Filtros)" required>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <input type="number" id="mant-costo" placeholder="Costo ($)" required>
-            <input type="number" id="mant-km" placeholder="Km al momento del servicio" required>
-          </div>
-
-          <input type="text" id="mant-taller" placeholder="Taller / Concesionario Oficial">
-          <button type="submit">Asentar en Hoja de Vida Embebida</button>
-          <div id="msg-mant" class="error-box"></div>
-        </form>
-      </div>
-
-      <!-- Nómina de Choferes -->
-      <div class="card">
-        <h2>Nómina de Choferes y Licencias</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Foto</th>
-              <th>DNI</th>
-              <th>Nombre</th>
-              <th>Teléfono</th>
-              <th>Licencia</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="choferes-body"></tbody>
-        </table>
       </div>
 
       <!-- Inventario de Camiones con Mantenimientos Embebidos -->
@@ -230,7 +193,50 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- VISTA 4: ANALÍTICA AGGREGATION PIPELINE -->
+    <!-- VISTA 4: CHOFERES & NÓMINA (Página dedicada) -->
+    <!-- ========================================== -->
+    <section id="view-choferes" class="tab-view">
+      <!-- Alta de Chofer (Create) -->
+      <div class="card" style="margin-bottom: 24px;">
+        <h2>➕ Registrar Nuevo Chofer</h2>
+        <form id="form-chofer">
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+            <input type="text" id="chofer-dni" placeholder="DNI (ej: 40123456)" required>
+            <input type="text" id="chofer-nombre" placeholder="Nombre completo" required>
+          </div>
+          <input type="text" id="chofer-tel" placeholder="Teléfono de contacto" required>
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+            <input type="text" id="chofer-lic-cat" placeholder="Categoría (ej: E1)" value="E1" required>
+            <input type="date" id="chofer-lic-venc" placeholder="Vencimiento" required>
+          </div>
+          <input type="text" id="chofer-foto" placeholder="URL Foto (ej: /images/choferes/horacio.jpg)">
+          <button type="submit">Guardar Chofer</button>
+          <div id="msg-chofer" class="error-box"></div>
+        </form>
+      </div>
+
+      <!-- Nómina de Choferes -->
+      <div class="card">
+        <h2>Nómina de Choferes y Licencias Profesionales</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>DNI</th>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Licencia</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="choferes-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VISTA 5: ANALÍTICA AGGREGATION PIPELINE -->
     <!-- ========================================== -->
     <section id="view-stats" class="tab-view">
       <div class="card">
