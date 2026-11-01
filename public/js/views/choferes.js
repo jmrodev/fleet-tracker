@@ -1,7 +1,7 @@
 // public/js/views/choferes.js - Vista dedicada e independiente de Choferes (Harden + Filtros + Modal Edición)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
-import { openModal, closeModal, showToast } from '../app.js';
+import { openModal, closeModal, showToast, confirmAction } from '../app.js';
 import { icons } from '../icons.js';
 
 let choferesCache = [];
@@ -205,14 +205,20 @@ function abrirModalEdicionChofer(ch) {
   openModal('modal-editar-chofer');
 }
 
-async function borrarChofer(dni) {
-  if (!confirm(`¿Está seguro de dar de baja al chofer con DNI ${dni}?`)) return;
-  try {
-    await api.eliminarChofer(dni);
-    showToast(`Chofer DNI ${dni} dado de baja.`);
-    await renderChoferes();
-    await renderKPIs();
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+function borrarChofer(dni) {
+  confirmAction({
+    title: `Dar de Baja Chofer DNI ${dni}`,
+    message: `¿Está seguro de desvincular al chofer con DNI ${dni} de la nómina activa?`,
+    confirmText: 'Dar de Baja',
+    onConfirm: async () => {
+      try {
+        await api.eliminarChofer(dni);
+        showToast(`Chofer DNI ${dni} dado de baja.`);
+        await renderChoferes();
+        await renderKPIs();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+  });
 }

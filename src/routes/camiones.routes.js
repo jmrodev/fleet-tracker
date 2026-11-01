@@ -66,6 +66,9 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Estados operacionales válidos (Strict State Machine Invariant)
+const ESTADOS_CAMION_VALIDOS = ['disponible', 'en_mantenimiento', 'en_viaje'];
+
 // 4. Actualizar camión (Update)
 router.put('/:patente', async (req, res) => {
   try {
@@ -78,8 +81,22 @@ router.put('/:patente', async (req, res) => {
     if (modelo !== undefined) fieldsToSet.modelo = String(modelo).trim();
     if (anio !== undefined) fieldsToSet.anio = Number(anio);
     if (capacidad_kg !== undefined) fieldsToSet.capacidad_kg = Number(capacidad_kg);
-    if (kilometraje_actual !== undefined) fieldsToSet.kilometraje_actual = Number(kilometraje_actual);
-    if (estado !== undefined) fieldsToSet.estado = String(estado).trim();
+    if (kilometraje_actual !== undefined) {
+      const kmNum = Number(kilometraje_actual);
+      if (isNaN(kmNum) || kmNum < 0) {
+        return res.status(400).json({ error: 'kilometraje_actual debe ser un número mayor o igual a 0' });
+      }
+      fieldsToSet.kilometraje_actual = kmNum;
+    }
+    if (estado !== undefined) {
+      const estadoStr = String(estado).trim();
+      if (!ESTADOS_CAMION_VALIDOS.includes(estadoStr)) {
+        return res.status(400).json({ 
+          error: `Estado inválido '${estadoStr}'. Estados permitidos: ${ESTADOS_CAMION_VALIDOS.join(', ')}` 
+        });
+      }
+      fieldsToSet.estado = estadoStr;
+    }
     if (foto_url !== undefined) fieldsToSet.foto_url = String(foto_url).trim();
 
     if (Object.keys(fieldsToSet).length === 0) {
@@ -129,7 +146,7 @@ router.post('/:patente/mantenimientos', async (req, res) => {
   try {
     const db = getDB();
     const patente = req.params.patente.toUpperCase();
-    const { tipo, taller, costo, km_servicio, detalles } = req.body;
+    const { tipo, taller, costo, km_servicio, detalles, cambiar_estado } = req.body;
 
     if (!tipo || costo === undefined || !km_servicio) {
       return res.status(400).json({ error: 'tipo, costo y km_servicio son obligatorios' });
@@ -145,12 +162,24 @@ router.post('/:patente/mantenimientos', async (req, res) => {
       fecha: new Date()
     };
 
+    const updateOps = {
+      $push: { mantenimientos: registro }
+    };
+
+    // Si explícitamente se solicita cambio de estado (ej: 'disponible' o 'en_mantenimiento')
+    if (cambiar_estado !== undefined) {
+      const estadoStr = String(cambiar_estado).trim();
+      if (!ESTADOS_CAMION_VALIDOS.includes(estadoStr)) {
+        return res.status(400).json({ 
+          error: `Estado inválido '${estadoStr}'. Permitidos: ${ESTADOS_CAMION_VALIDOS.join(', ')}` 
+        });
+      }
+      updateOps.$set = { estado: estadoStr };
+    }
+
     const result = await db.collection('camiones').updateOne(
       { patente },
-      {
-        $push: { mantenimientos: registro },
-        $set: { estado: 'disponible' }
-      }
+      updateOps
     );
 
     if (result.matchedCount === 0) {

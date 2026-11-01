@@ -1,7 +1,7 @@
 // public/js/views/camiones.js - Vista dedicada de Camiones & Mantenimiento (Harden + Filtros + Modal Edición)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
-import { openModal, closeModal, showToast } from '../app.js';
+import { openModal, closeModal, showToast, confirmAction } from '../app.js';
 import { icons } from '../icons.js';
 
 let flotaCache = [];
@@ -341,16 +341,22 @@ function abrirModalEdicion(c) {
   openModal('modal-editar-camion');
 }
 
-async function borrarCamion(patente) {
-  if (!confirm(`¿Está seguro de eliminar el camión con patente ${patente}?`)) return;
-  try {
-    await api.eliminarCamion(patente);
-    showToast(`Camión ${patente} eliminado.`);
-    await renderCamiones();
-    await renderKPIs();
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+function borrarCamion(patente) {
+  confirmAction({
+    title: `Eliminar Camión ${patente}`,
+    message: `¿Está seguro de dar de baja la unidad con patente ${patente}? Esta operación quitará el vehículo de la flota activa.`,
+    confirmText: 'Dar de Baja',
+    onConfirm: async () => {
+      try {
+        await api.eliminarCamion(patente);
+        showToast(`Camión ${patente} eliminado.`);
+        await renderCamiones();
+        await renderKPIs();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+  });
 }
 
 function actualizarSelectorMantenimiento(camiones) {

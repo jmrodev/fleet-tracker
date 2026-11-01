@@ -23,8 +23,8 @@ async function connectDB() {
     await sembrarDatosIniciales();
     return db;
   } catch (err) {
-    console.error('[FATAL] Error de conexión con MongoDB:', err.message);
-    process.exit(1);
+    console.error('[ERROR] Error de conexión con MongoDB:', err.message);
+    throw err;
   }
 }
 
