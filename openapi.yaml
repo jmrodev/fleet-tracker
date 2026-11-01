@@ -62,6 +62,69 @@ paths:
         '409':
           description: Conflicto - Patente duplicada
 
+  /api/camiones/{patente}:
+    get:
+      summary: Obtener detalle de un camión
+      parameters:
+        - name: patente
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del camión
+        '404':
+          description: Camión no encontrado
+    put:
+      summary: Actualizar datos de un camión
+      parameters:
+        - name: patente
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marca:
+                  type: string
+                modelo:
+                  type: string
+                capacidad_kg:
+                  type: number
+                kilometraje_actual:
+                  type: number
+                estado:
+                  type: string
+                  enum: [disponible, en_viaje, en_mantenimiento]
+                foto_url:
+                  type: string
+      responses:
+        '200':
+          description: Camión actualizado
+        '404':
+          description: Camión no encontrado
+    delete:
+      summary: Eliminar un camión de la flota
+      parameters:
+        - name: patente
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Camión eliminado
+        '400':
+          description: No se puede eliminar una unidad en viaje
+        '404':
+          description: Camión no encontrado
+
   /api/choferes:
     get:
       summary: Listar choferes
@@ -109,6 +172,72 @@ paths:
           description: Chofer registrado
         '409':
           description: DNI duplicado
+
+  /api/choferes/{dni}:
+    get:
+      summary: Obtener detalle de un chofer
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del chofer
+        '404':
+          description: Chofer no encontrado
+    put:
+      summary: Actualizar datos de un chofer
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                telefono:
+                  type: string
+                licencia:
+                  type: object
+                  properties:
+                    categoria:
+                      type: string
+                    vencimiento:
+                      type: string
+                estado:
+                  type: string
+                  enum: [disponible, asignado, descanso]
+                foto_url:
+                  type: string
+      responses:
+        '200':
+          description: Chofer actualizado
+        '404':
+          description: Chofer no encontrado
+    delete:
+      summary: Eliminar un chofer
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chofer eliminado
+        '400':
+          description: No se puede eliminar un chofer con viaje asignado
+        '404':
+          description: Chofer no encontrado
 
   /api/viajes:
     get:
