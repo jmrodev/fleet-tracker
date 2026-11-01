@@ -5,10 +5,18 @@ export const api = {
     return res.json();
   },
 
+  // --- CAMIONES CRUD ---
   async getCamiones(estado) {
     const url = estado ? `/api/camiones?estado=${encodeURIComponent(estado)}` : '/api/camiones';
     const res = await fetch(url);
     return res.json();
+  },
+
+  async getCamion(patente) {
+    const res = await fetch(`/api/camiones/${encodeURIComponent(patente)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al obtener camión');
+    return data;
   },
 
   async crearCamion(payload) {
@@ -19,6 +27,26 @@ export const api = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al registrar camión');
+    return data;
+  },
+
+  async actualizarCamion(patente, payload) {
+    const res = await fetch(`/api/camiones/${encodeURIComponent(patente)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al actualizar camión');
+    return data;
+  },
+
+  async eliminarCamion(patente) {
+    const res = await fetch(`/api/camiones/${encodeURIComponent(patente)}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al eliminar camión');
     return data;
   },
 
@@ -33,10 +61,18 @@ export const api = {
     return data;
   },
 
+  // --- CHOFERES CRUD ---
   async getChoferes(estado) {
     const url = estado ? `/api/choferes?estado=${encodeURIComponent(estado)}` : '/api/choferes';
     const res = await fetch(url);
     return res.json();
+  },
+
+  async getChofer(dni) {
+    const res = await fetch(`/api/choferes/${encodeURIComponent(dni)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al obtener chofer');
+    return data;
   },
 
   async crearChofer(payload) {
@@ -50,6 +86,27 @@ export const api = {
     return data;
   },
 
+  async actualizarChofer(dni, payload) {
+    const res = await fetch(`/api/choferes/${encodeURIComponent(dni)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al actualizar chofer');
+    return data;
+  },
+
+  async eliminarChofer(dni) {
+    const res = await fetch(`/api/choferes/${encodeURIComponent(dni)}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al eliminar chofer');
+    return data;
+  },
+
+  // --- VIAJES ---
   async getViajes(estado) {
     const url = estado ? `/api/viajes?estado=${encodeURIComponent(estado)}` : '/api/viajes';
     const res = await fetch(url);
@@ -78,6 +135,7 @@ export const api = {
     return data;
   },
 
+  // --- ESTADÍSTICAS ---
   async getStats() {
     const res = await fetch('/api/stats/flota');
     return res.json();

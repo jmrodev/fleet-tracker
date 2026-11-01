@@ -127,43 +127,85 @@
     <!-- ========================================== -->
     <section id="view-flota" class="tab-view">
       <div class="grid-2col">
-        <!-- Registrar Mantenimiento -->
+        <!-- Alta de Camión (Create) -->
         <div class="card">
-          <h2>Registrar Mantenimiento Preventivo ($push)</h2>
-          <form id="form-mant">
-            <label style="color:#8b949e; font-size:12px;">Camión:</label>
-            <select id="mant-camion" required></select>
-
-            <input type="text" id="mant-tipo" placeholder="Tipo de Servicio (ej: Cambio de Frenos y Filtros)" required>
-            
+          <h2>➕ Registrar Nuevo Camión</h2>
+          <form id="form-camion">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <input type="number" id="mant-costo" placeholder="Costo ($)" required>
-              <input type="number" id="mant-km" placeholder="Km al momento del servicio" required>
+              <input type="text" id="camion-patente" placeholder="Patente (ej: AG999ZZ)" required>
+              <input type="text" id="camion-marca" placeholder="Marca (ej: Scania)" required>
             </div>
-
-            <input type="text" id="mant-taller" placeholder="Taller / Concesionario Oficial">
-            <button type="submit">Asentar en Hoja de Vida Embebida</button>
-            <div id="msg-mant" class="error-box"></div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+              <input type="text" id="camion-modelo" placeholder="Modelo (ej: R500 V8)" required>
+              <input type="number" id="camion-anio" placeholder="Año" value="2024" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <input type="number" id="camion-capacidad" placeholder="Capacidad (Kg)" required>
+              <input type="number" id="camion-km" placeholder="Odómetro inicial (Km)">
+            </div>
+            <input type="text" id="camion-foto" placeholder="URL Foto (ej: /images/camiones/scania.jpg)">
+            <button type="submit">Guardar Camión</button>
+            <div id="msg-camion" class="error-box"></div>
           </form>
         </div>
 
-        <!-- Nómina de Choferes -->
+        <!-- Alta de Chofer (Create) -->
         <div class="card">
-          <h2>Nómina de Choferes y Licencias</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Foto</th>
-                <th>DNI</th>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Licencia</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="choferes-body"></tbody>
-          </table>
+          <h2>➕ Registrar Nuevo Chofer</h2>
+          <form id="form-chofer">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+              <input type="text" id="chofer-dni" placeholder="DNI (ej: 40123456)" required>
+              <input type="text" id="chofer-nombre" placeholder="Nombre completo" required>
+            </div>
+            <input type="text" id="chofer-tel" placeholder="Teléfono de contacto" required>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+              <input type="text" id="chofer-lic-cat" placeholder="Categoría (ej: E1)" value="E1" required>
+              <input type="date" id="chofer-lic-venc" placeholder="Vencimiento" required>
+            </div>
+            <input type="text" id="chofer-foto" placeholder="URL Foto (ej: /images/choferes/horacio.jpg)">
+            <button type="submit">Guardar Chofer</button>
+            <div id="msg-chofer" class="error-box"></div>
+          </form>
         </div>
+      </div>
+
+      <!-- Registrar Mantenimiento Preventivo -->
+      <div class="card">
+        <h2>🔧 Registrar Mantenimiento Preventivo ($push Embebido)</h2>
+        <form id="form-mant">
+          <label style="color:#8b949e; font-size:12px;">Camión a intervenir:</label>
+          <select id="mant-camion" required></select>
+
+          <input type="text" id="mant-tipo" placeholder="Tipo de Servicio (ej: Cambio de Frenos y Filtros)" required>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <input type="number" id="mant-costo" placeholder="Costo ($)" required>
+            <input type="number" id="mant-km" placeholder="Km al momento del servicio" required>
+          </div>
+
+          <input type="text" id="mant-taller" placeholder="Taller / Concesionario Oficial">
+          <button type="submit">Asentar en Hoja de Vida Embebida</button>
+          <div id="msg-mant" class="error-box"></div>
+        </form>
+      </div>
+
+      <!-- Nómina de Choferes -->
+      <div class="card">
+        <h2>Nómina de Choferes y Licencias</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>DNI</th>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Licencia</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="choferes-body"></tbody>
+        </table>
       </div>
 
       <!-- Inventario de Camiones con Mantenimientos Embebidos -->
@@ -179,6 +221,7 @@
               <th>Odómetro Actual</th>
               <th>Estado</th>
               <th>Historial de Mantenimientos Embebidos</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="camiones-body"></tbody>
