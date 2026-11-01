@@ -1,4 +1,4 @@
-// public/js/views/viajes.js - Vista de Despacho y Seguimiento de Viajes (Harden)
+// public/js/views/viajes.js - Vista de Despacho y Seguimiento de Viajes (Harden + Modales)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 
@@ -13,7 +13,6 @@ export async function initViajesView() {
       msg.textContent = '';
       msg.className = 'error-box';
 
-      // Harden: Prevención de doble despacho concurrente
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Despachando unidad...';
@@ -33,6 +32,10 @@ export async function initViajesView() {
         e.target.reset();
         msg.className = 'success-box';
         msg.textContent = '✓ Viaje despachado y registrado atómicamente.';
+        setTimeout(() => {
+          const modal = document.getElementById('modal-viaje');
+          if (modal) modal.classList.remove('active');
+        }, 800);
         await renderViajes();
         await renderKPIs();
       } catch (err) {
@@ -86,42 +89,51 @@ async function actualizarSelectores() {
 }
 
 async function renderTablaViajes() {
-  const tbody = document.getElementById('viajes-body');
-  if (!tbody) return;
+  const tbodies = [
+    document.getElementById('viajes-body'),
+    document.getElementById('viajes-body-dedicated')
+  ].filter(Boolean);
+
+  if (tbodies.length === 0) return;
 
   try {
     const viajes = await api.getViajes('en_curso');
-    tbody.innerHTML = '';
 
-    if (viajes.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="empty-state">
-            <div class="empty-state-icon">🛣️</div>
-            <div class="empty-state-text">No hay unidades en tránsito inmediato hacia destino.</div>
+    tbodies.forEach(tbody => {
+      tbody.innerHTML = '';
+
+      if (viajes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">
+              <div class="empty-state-icon">🛣️</div>
+              <div class="empty-state-text">No hay unidades en tránsito inmediato hacia destino.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      viajes.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong style="font-family: var(--font-mono);">${v.camion_patente}</strong></td>
+          <td>${v.chofer_nombre}</td>
+          <td class="truncate-cell" title="${v.origen} ➔ ${v.destino}">${v.origen} ➔ ${v.destino}</td>
+          <td class="truncate-cell" title="${v.carga_descripcion} (${v.peso_kg.toLocaleString()} kg)">${v.carga_descripcion} (${v.peso_kg.toLocaleString()} kg)</td>
+          <td>
+            <button class="btn-secondary btn-finalizar" style="padding: 4px 8px; font-size: 11px;">🏁 Asentar Llegada</button>
           </td>
-        </tr>
-      `;
-      return;
-    }
+        `;
 
-    viajes.forEach(v => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong style="font-family: var(--font-mono);">${v.camion_patente}</strong></td>
-        <td>${v.chofer_nombre}</td>
-        <td class="truncate-cell" title="${v.origen} ➔ ${v.destino}">${v.origen} ➔ ${v.destino}</td>
-        <td class="truncate-cell" title="${v.carga_descripcion} (${v.peso_kg.toLocaleString()} kg)">${v.carga_descripcion} (${v.peso_kg.toLocaleString()} kg)</td>
-        <td>
-          <button class="btn-secondary btn-finalizar" style="padding: 4px 8px; font-size: 11px;">🏁 Asentar Llegada</button>
-        </td>
-      `;
-
-      tr.querySelector('.btn-finalizar').addEventListener('click', () => finalizarViaje(v));
-      tbody.appendChild(tr);
+        tr.querySelector('.btn-finalizar').addEventListener('click', () => finalizarViaje(v));
+        tbody.appendChild(tr);
+      });
     });
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red-danger);">Error al cargar viajes: ${err.message}</td></tr>`;
+    tbodies.forEach(tbody => {
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red-danger);">Error al cargar viajes: ${err.message}</td></tr>`;
+    });
   }
 }
 

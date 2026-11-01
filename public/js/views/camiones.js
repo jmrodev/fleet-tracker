@@ -39,6 +39,10 @@ function bindFormNuevoCamion() {
         e.target.reset();
         msg.className = 'success-box';
         msg.textContent = '✓ Camión registrado con éxito (Índice único verificado en motor).';
+        setTimeout(() => {
+          const modal = document.getElementById('modal-camion');
+          if (modal) modal.classList.remove('active');
+        }, 800);
         await renderCamiones();
         await renderKPIs();
       } catch (err) {
@@ -87,6 +91,10 @@ function bindFormMantenimiento() {
         e.target.reset();
         msg.className = 'success-box';
         msg.textContent = '✓ Mantenimiento asentado exitosamente en hoja de vida ($push atómico).';
+        setTimeout(() => {
+          const modal = document.getElementById('modal-mant');
+          if (modal) modal.classList.remove('active');
+        }, 800);
         await renderCamiones();
         await renderKPIs();
       } catch (err) {
