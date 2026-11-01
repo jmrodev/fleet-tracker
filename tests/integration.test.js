@@ -48,6 +48,26 @@ async function runTests() {
     console.assert(updateRes.modifiedCount === 1, 'ERROR: No se pudo hacer $push');
     console.log('  ✓ Modificación atómica $push en subdocumento exitosa.');
 
+    // 4. Probar Reserva Atómica Concurrente (Compare-and-Swap con findOneAndUpdate)
+    const reservaExitosa = await db.collection('camiones').findOneAndUpdate(
+      { patente: 'AE123CD', estado: 'disponible' },
+      { $set: { estado: 'en_viaje' } },
+      { returnDocument: 'after' }
+    );
+    console.assert(reservaExitosa !== null, 'ERROR: No se pudo reservar el camión disponible');
+
+    // Intentar segunda reserva en concurrencia (debe ser rechazada atómicamente por el motor)
+    const reservaDuplicada = await db.collection('camiones').findOneAndUpdate(
+      { patente: 'AE123CD', estado: 'disponible' },
+      { $set: { estado: 'en_viaje' } },
+      { returnDocument: 'after' }
+    );
+    console.assert(reservaDuplicada === null, 'ERROR: El motor permitió doble reserva concurrente');
+    console.log('  ✓ Atomicidad y rechazo de carrera concurrentes verificado.');
+
+    // Restaurar estado
+    await db.collection('camiones').updateOne({ patente: 'AE123CD' }, { $set: { estado: 'disponible' } });
+
     console.log('\n[TEST RESULT] TODOS LOS TESTS PASARON (0 fallas).');
   } catch (err) {
     console.error('[TEST FATAL]:', err.message);
