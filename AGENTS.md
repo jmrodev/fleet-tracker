@@ -20,7 +20,6 @@ Cada feature o refactor DEBE seguir secuencialmente los pasos del arnés:
 2. **Contrato OpenAPI (`openapi.yaml`):** Es la ÚNICA fuente de verdad entre frontend y backend. Modificaciones a la API exigen actualizar primero el contrato.
 3. **Verificación de Contrato con Hurl:** Toda ruta del contrato debe contar con su prueba en `tests/*.hurl` y pasar en verde contra el mock de Chelo:
    ```bash
-   # Vía tool chelo_contract_test o CLI
    hurl --test tests/001_contract.hurl
    ```
 4. **Disyuntor de Seguridad (Límite de 10 archivos):** No superar 10 archivos modificados por ciclo/ticket (`chelo_audit_changes` / `chelo_quality_gate`). Si supera el límite, la tarea debe dividirse en micro-tickets atómicos.
@@ -34,23 +33,35 @@ Queda terminantemente prohibido commitear directo a `main`. Todo ciclo de desarr
 
 ```mermaid
 flowchart LR
-    Milestone["🎯 Milestone Activo"] --> Issue["📋 GitHub Issue (Feature/Bug)"]
+    Milestone["🎯 Milestone Activo"] --> Issue["📋 GitHub Issue (Assignee: @jmrodev)"]
     Issue --> Branch["🌿 Rama feat/ o fix/"]
     Branch --> Test["🧪 Tests & Quality Gate"]
-    Test --> PR["🔀 Pull Request con Closes #ID"]
-    PR --> Merge["🚀 Squash & Merge a main"]
+    Test --> PR["🔀 Pull Request (Assignee & Reviewer)"]
+    PR --> Review["💬 Revisión Técnica Obligatoria (Approved)"]
+    Review --> Merge["🚀 Squash & Merge a main"]
 ```
 
 ### Protocolo de ejecución:
-1. **Milestones & Issues:** Cada requerimiento debe asociarse a un Milestone formal y contar con su GitHub Issue con descripción y criterios de aceptación.
+1. **Milestones & Asignación Obligatoria:**
+   - Todo Issue y PR debe asociarse a un **Milestone**.
+   - Todo Issue y PR debe tener obligatoriamente asignado a **`@jmrodev`** (`--assignee jmrodev`).
 2. **Feature Branch:** Crear una rama específica para la tarea:
    ```bash
    git checkout -b feat/<nombre-descriptivo>
    ```
 3. **Conventional Commits:** Mensajes con formato canónico (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`). Prohibido añadir firmas artificiales de IA.
-4. **Pull Request & Resolución:** Abrir PR hacia `main` referenciando el issue con la directiva de cierre (`Closes #ID`).
-5. **Merge & Limpieza:** Realizar **Squash & Merge**, verificar el cierre automático del issue y eliminar la rama de trabajo.
-6. **Despliegue & Daily Board:** Cada push a `main` activa el workflow de GitHub Actions desplegando el tablero en GitHub Pages ([`jmrodev.github.io/fleet-tracker`](https://jmrodev.github.io/fleet-tracker/)).
+4. **Pull Request con Descripción Exhaustiva:**
+   - Abrir PR hacia `main` referenciando el issue con directiva de cierre (`Closes #ID`).
+   - El cuerpo del PR debe documentar: Resumen técnico, Criterios de aceptación verificados y Pruebas ejecutadas.
+5. **COMENTARIOS Y REVISIÓN OBLIGATORIA (BRANCH PROTECTION):**
+   - **Prohibido el silencio:** NINGÚN Issue ni PR puede cerrarse o mergearse sin comentarios explícitos de avance, auditoría técnica o resolución.
+   - **Comentario de Cierre en Issues:** Al completar un issue, asentar siempre un comentario resumiendo qué se implementó, qué tests pasaron y con qué PR se resolvió.
+   - **Revisión y Aprobación en PR:** La rama `main` exige **1 revisión con estado "Approved"** vía GitHub Branch Protection (`CODEOWNERS`). El revisor DEBE dejar un comentario técnico con el veredicto de calidad antes del merge:
+     ```bash
+     gh pr review <PR_NUMBER> --approve --body "Auditoría completada. Tests en verde, contrato OpenAPI respetado y cero deuda técnica. Aprobado para merge."
+     ```
+6. **Merge & Limpieza:** Realizar **Squash & Merge**, verificar el cierre automático de los issues y eliminar la rama de trabajo.
+7. **Despliegue & Daily Board:** Cada push a `main` activa el workflow de GitHub Actions desplegando el tablero en GitHub Pages ([`jmrodev.github.io/fleet-tracker`](https://jmrodev.github.io/fleet-tracker/)).
 
 ---
 
