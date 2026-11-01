@@ -547,6 +547,21 @@
     </div>
   </div>
 
+  <!-- 9. Modal Confirmación de Eliminación (Harden / No más confirm()) -->
+  <div id="modal-confirm-delete" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 id="modal-confirm-delete-title" style="color: var(--red-danger);">Confirmar Eliminación</h3>
+        <button class="modal-close" data-close="modal-confirm-delete">&times;</button>
+      </div>
+      <p id="modal-confirm-delete-text" style="color: var(--text-primary); font-size: 13px; margin: 0 0 16px 0;"></p>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn-secondary" data-close="modal-confirm-delete">Cancelar</button>
+        <button id="btn-confirm-delete-action" class="btn-danger" style="width: auto;">Confirmar y Eliminar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Contenedor Flotante de Toasts -->
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 

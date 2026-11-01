@@ -65,6 +65,9 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Estados de nómina válidos (Strict State Machine Invariant)
+const ESTADOS_CHOFER_VALIDOS = ['disponible', 'asignado', 'descanso'];
+
 // 4. Actualizar chofer (Update)
 router.put('/:dni', async (req, res) => {
   try {
@@ -75,7 +78,15 @@ router.put('/:dni', async (req, res) => {
     const fieldsToSet = {};
     if (nombre !== undefined) fieldsToSet.nombre = String(nombre).trim();
     if (telefono !== undefined) fieldsToSet.telefono = String(telefono).trim();
-    if (estado !== undefined) fieldsToSet.estado = String(estado).trim();
+    if (estado !== undefined) {
+      const estadoStr = String(estado).trim();
+      if (!ESTADOS_CHOFER_VALIDOS.includes(estadoStr)) {
+        return res.status(400).json({ 
+          error: `Estado inválido '${estadoStr}'. Estados permitidos: ${ESTADOS_CHOFER_VALIDOS.join(', ')}` 
+        });
+      }
+      fieldsToSet.estado = estadoStr;
+    }
     if (foto_url !== undefined) fieldsToSet.foto_url = String(foto_url).trim();
 
     if (licencia) {

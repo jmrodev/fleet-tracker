@@ -38,6 +38,26 @@ export function closeModal(modalId) {
   }
 }
 
+export function confirmAction({ title, message, confirmText = 'Confirmar y Eliminar', onConfirm }) {
+  const modal = document.getElementById('modal-confirm-delete');
+  const titleEl = document.getElementById('modal-confirm-delete-title');
+  const textEl = document.getElementById('modal-confirm-delete-text');
+  const actionBtn = document.getElementById('btn-confirm-delete-action');
+
+  if (titleEl) titleEl.textContent = title || 'Confirmar Acción';
+  if (textEl) textEl.textContent = message || '¿Está seguro de continuar?';
+  if (actionBtn) {
+    actionBtn.textContent = confirmText;
+    actionBtn.onclick = async () => {
+      closeModal('modal-confirm-delete');
+      if (typeof onConfirm === 'function') {
+        await onConfirm();
+      }
+    };
+  }
+  openModal('modal-confirm-delete');
+}
+
 function setupModals() {
   // Botones de apertura
   const btnViaje = document.getElementById('btn-open-modal-viaje');
