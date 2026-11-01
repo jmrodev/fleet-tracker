@@ -29,11 +29,21 @@ jobs:
           ref: gh-pages
           path: ./board-site
 
-      - name: Force Tracker Context (No Daily pollution)
+      - name: Force Tracker Context (Clean Syntax)
         run: |
-          # Inyectar explícitamente jmrodev/fleet-tracker para evitar que tome ningún otro repo o fallback
-          sed -i 's|detectCurrentRepoSlug()|"jmrodev/fleet-tracker"|g' ./board-site/js/state.js
-          sed -i 's|detectRepoFromLocation()|"jmrodev/fleet-tracker"|g' ./board-site/js/state.js
+          # Reemplazar la resolución del slug de forma limpia y sintácticamente válida
+          python3 -c "
+          with open('./board-site/js/state.js', 'r') as f:
+              content = f.read()
+          
+          # Forzar detectedSlug directamente sin romper definiciones de funciones
+          content = content.replace('const detectedSlug = detectCurrentRepoSlug();', 'const detectedSlug = \"jmrodev/fleet-tracker\";')
+          
+          with open('./board-site/js/state.js', 'w') as f:
+              f.write(content)
+          "
+          # Validar sintaxis con Node.js en el runner
+          node -c ./board-site/js/state.js
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
