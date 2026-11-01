@@ -2,405 +2,208 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Sistema de Control de Flota y Mantenimiento</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
-      margin: 0;
-      padding: 24px;
-      background: #0d1117;
-      color: #e6edf3;
-    }
-    h1, h2, h3 { color: #58a6ff; margin-top: 0; }
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .kpi-card {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 16px;
-      text-align: center;
-    }
-    .kpi-val {
-      font-size: 28px;
-      font-weight: 700;
-      color: #3fb950;
-    }
-    .kpi-lbl {
-      color: #8b949e;
-      font-size: 13px;
-      margin-top: 4px;
-      text-transform: uppercase;
-    }
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    .card {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 18px;
-      margin-bottom: 24px;
-    }
-    input, select, textarea, button {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      color: #c9d1d9;
-      padding: 8px 10px;
-      border-radius: 4px;
-      margin-bottom: 8px;
-      font-size: 14px;
-      box-sizing: border-box;
-      width: 100%;
-    }
-    button {
-      background: #238636;
-      color: #ffffff;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      width: auto;
-      padding: 8px 16px;
-    }
-    button:hover { background: #2ea043; }
-    button.btn-finish {
-      background: #1f6feb;
-      padding: 4px 8px;
-      font-size: 12px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #30363d;
-      padding: 8px;
-      text-align: left;
-      font-size: 13px;
-    }
-    th { background: #21262d; color: #8b949e; }
-    .badge-disponible { background: #238636; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-    .badge-en_viaje { background: #1f6feb; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-    .badge-en_mantenimiento { background: #d29922; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-    .badge-en_curso { background: #1f6feb; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-    .badge-finalizado { background: #8957e5; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-    .error-box { color: #f85149; font-size: 13px; margin-top: 4px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Flota y Mantenimiento · MongoDB</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <h1>🚛 Control de Flota, Viajes y Mantenimiento</h1>
-  <p style="color: #8b949e; margin-bottom: 20px;">
-    Plataforma de logística impulsada por <strong>MongoDB</strong> (Documentos Embebidos + Aggregation Pipelines).
-  </p>
-
-  <!-- KPI CARDS CALCULADAS POR AGGREGATION PIPELINE -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div id="kpi-camiones" class="kpi-val">0</div>
-      <div class="kpi-lbl">Camiones en Flota</div>
+  <!-- Header Global -->
+  <header class="app-header">
+    <div class="brand-title">
+      <span style="font-size: 1.6rem;">🚛</span>
+      <div>
+        <h1>Fleet & Logistics Tracker</h1>
+        <span class="sub">Arquitectura Modular · MongoDB Engine & Spec-First</span>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div id="kpi-viaje" class="kpi-val" style="color: #58a6ff;">0</div>
-      <div class="kpi-lbl">En Viaje Activo</div>
-    </div>
-    <div class="kpi-card">
-      <div id="kpi-km" class="kpi-val" style="color: #d2a8ff;">0 km</div>
-      <div class="kpi-lbl">Km Totales Recorridos</div>
-    </div>
-    <div class="kpi-card">
-      <div id="kpi-viajes-fin" class="kpi-val">0</div>
-      <div class="kpi-lbl">Viajes Completados</div>
-    </div>
-  </div>
-
-  <div class="main-grid">
-    <!-- PANEL IZQUIERDO: ACCIONES -->
     <div>
-      <!-- Iniciar Viaje -->
-      <div class="card">
-        <h2>1. Despachar Viaje (Seguimiento)</h2>
-        <form id="form-viaje">
-          <label>Camión Disponible:</label>
-          <select id="viaje-camion" required></select>
+      <button id="btn-refresh" class="btn-secondary">🔄 Actualizar Datos</button>
+    </div>
+  </header>
 
-          <label>Chofer Disponible:</label>
-          <select id="viaje-chofer" required></select>
+  <!-- Navegación por Vistas Separadas (Tabs) -->
+  <nav class="view-tabs-bar">
+    <button class="view-tab active" data-tab="dashboard">📊 Dashboard Resumen</button>
+    <button class="view-tab" data-tab="viajes">🛣️ Despacho & Viajes</button>
+    <button class="view-tab" data-tab="flota">🚚 Flota & Mantenimiento</button>
+    <button class="view-tab" data-tab="stats">📈 Analítica Aggregation</button>
+  </nav>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <input type="text" id="viaje-origen" placeholder="Origen (ej: Tandil)" required>
-            <input type="text" id="viaje-destino" placeholder="Destino (ej: Rosario)" required>
-          </div>
+  <main class="main-container">
 
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
-            <input type="text" id="viaje-carga" placeholder="Carga (ej: Granos de Trigo)" required>
-            <input type="number" id="viaje-peso" placeholder="Peso (Kg)" required>
-          </div>
-
-          <button type="submit">Despachar Viaje</button>
-          <div id="msg-viaje" class="error-box"></div>
-        </form>
+    <!-- KPI CARDS SIEMPRE VISIBLES -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div id="kpi-camiones" class="kpi-val">0</div>
+        <div class="kpi-lbl">Camiones en Flota</div>
       </div>
-
-      <!-- Registrar Mantenimiento -->
-      <div class="card">
-        <h2>2. Registrar Mantenimiento Preventivo ($push)</h2>
-        <form id="form-mant">
-          <label>Camión:</label>
-          <select id="mant-camion" required></select>
-
-          <input type="text" id="mant-tipo" placeholder="Tipo de Servicio (ej: Cambio de Frenos)" required>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <input type="number" id="mant-costo" placeholder="Costo ($)" required>
-            <input type="number" id="mant-km" placeholder="Km al servicio" required>
-          </div>
-
-          <input type="text" id="mant-taller" placeholder="Taller / Proveedor">
-          <button type="submit">Asentar en Hoja de Vida</button>
-          <div id="msg-mant" class="error-box"></div>
-        </form>
+      <div class="kpi-card">
+        <div id="kpi-viaje" class="kpi-val" style="color: #58a6ff;">0</div>
+        <div class="kpi-lbl">En Viaje Activo</div>
+      </div>
+      <div class="kpi-card">
+        <div id="kpi-km" class="kpi-val" style="color: #d2a8ff;">0 km</div>
+        <div class="kpi-lbl">Km Totales Recorridos</div>
+      </div>
+      <div class="kpi-card">
+        <div id="kpi-viajes-fin" class="kpi-val">0</div>
+        <div class="kpi-lbl">Viajes Completados</div>
       </div>
     </div>
 
-    <!-- PANEL DERECHO: ANALÍTICA Y REPORTES -->
-    <div>
-      <div class="card">
-        <h2>3. Gastos de Mantenimiento por Marca (Pipeline MongoDB)</h2>
-        <p style="color: #8b949e; font-size: 13px;">Procesado mediante <code>$unwind</code> de array embebido y <code>$group</code> in-engine.</p>
-        <div id="gastos-tabla">Cargando métricas...</div>
+    <!-- ========================================== -->
+    <!-- VISTA 1: DASHBOARD RESUMEN -->
+    <!-- ========================================== -->
+    <section id="view-dashboard" class="tab-view active">
+      <div class="grid-2col">
+        <div class="card">
+          <h2>🛣️ Viajes en Tránsito Inmediato</h2>
+          <p style="color: #8b949e; font-size: 13px;">Unidades actualmente en ruta hacia destino.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Camión</th>
+                <th>Chofer</th>
+                <th>Trayecto</th>
+                <th>Carga</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="viajes-body"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>📈 Inversión en Mantenimiento por Marca</h2>
+          <p style="color: #8b949e; font-size: 13px;">Pipeline <code>$unwind</code> y <code>$group</code> en MongoDB.</p>
+          <div id="gastos-tabla">Cargando métricas...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VISTA 2: DESPACHO & SEGUIMIENTO DE VIAJES -->
+    <!-- ========================================== -->
+    <section id="view-viajes" class="tab-view">
+      <div class="grid-2col">
+        <div class="card">
+          <h2>Despachar Nuevo Viaje</h2>
+          <form id="form-viaje">
+            <label style="color:#8b949e; font-size:12px;">Camión Disponible:</label>
+            <select id="viaje-camion" required></select>
+
+            <label style="color:#8b949e; font-size:12px;">Chofer Disponible:</label>
+            <select id="viaje-chofer" required></select>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <input type="text" id="viaje-origen" placeholder="Origen (ej: Tandil)" required>
+              <input type="text" id="viaje-destino" placeholder="Destino (ej: Rosario)" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+              <input type="text" id="viaje-carga" placeholder="Carga (ej: Granos de Soja)" required>
+              <input type="number" id="viaje-peso" placeholder="Peso (Kg)" required>
+            </div>
+
+            <button type="submit">Iniciar Despacho</button>
+            <div id="msg-viaje" class="error-box"></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Reglas Operativas de Viajes</h2>
+          <ul style="color: #8b949e; font-size: 13px; line-height: 1.6; padding-left: 18px;">
+            <li><strong>Validación de Peso:</strong> No se permite despachar una carga que exceda la <code>capacidad_kg</code> de la unidad asignada.</li>
+            <li><strong>Mutación Concurrente:</strong> El camión pasa a <code>en_viaje</code> y el chofer a <code>asignado</code> de forma atómica.</li>
+            <li><strong>Odometría Real:</strong> Al finalizar el viaje, el odómetro de llegada computa los kilómetros y libera ambos recursos a <code>disponible</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VISTA 3: FLOTA & MANTENIMIENTO PREVENTIVO -->
+    <!-- ========================================== -->
+    <section id="view-flota" class="tab-view">
+      <div class="grid-2col">
+        <!-- Registrar Mantenimiento -->
+        <div class="card">
+          <h2>Registrar Mantenimiento Preventivo ($push)</h2>
+          <form id="form-mant">
+            <label style="color:#8b949e; font-size:12px;">Camión:</label>
+            <select id="mant-camion" required></select>
+
+            <input type="text" id="mant-tipo" placeholder="Tipo de Servicio (ej: Cambio de Frenos y Filtros)" required>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <input type="number" id="mant-costo" placeholder="Costo ($)" required>
+              <input type="number" id="mant-km" placeholder="Km al momento del servicio" required>
+            </div>
+
+            <input type="text" id="mant-taller" placeholder="Taller / Concesionario Oficial">
+            <button type="submit">Asentar en Hoja de Vida Embebida</button>
+            <div id="msg-mant" class="error-box"></div>
+          </form>
+        </div>
+
+        <!-- Nómina de Choferes -->
+        <div class="card">
+          <h2>Nómina de Choferes y Licencias</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Licencia</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="choferes-body"></tbody>
+          </table>
+        </div>
       </div>
 
+      <!-- Inventario de Camiones con Mantenimientos Embebidos -->
       <div class="card">
-        <h2>4. Viajes en Curso (Seguimiento en Vivo)</h2>
+        <h2>Inventario General de Unidades y Mantenimientos Embebidos</h2>
         <table>
           <thead>
             <tr>
-              <th>Camión</th>
-              <th>Chofer</th>
-              <th>Trayecto</th>
-              <th>Carga</th>
-              <th>Acción</th>
+              <th>Foto</th>
+              <th>Patente</th>
+              <th>Unidad</th>
+              <th>Capacidad</th>
+              <th>Odómetro Actual</th>
+              <th>Estado</th>
+              <th>Historial de Mantenimientos Embebidos</th>
             </tr>
           </thead>
-          <tbody id="viajes-body"></tbody>
+          <tbody id="camiones-body"></tbody>
         </table>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- ESTADO GENERAL DE LA FLOTA -->
-  <div class="card">
-    <h2>5. Inventario de Flota (Documentos y Mantenimientos Embebidos)</h2>
-    <button onclick="cargarTodo()">Actualizar Panel</button>
-    <table>
-      <thead>
-        <tr>
-          <th>Patente</th>
-          <th>Unidad</th>
-          <th>Capacidad</th>
-          <th>Odómetro</th>
-          <th>Estado</th>
-          <th>Historial de Mantenimientos</th>
-        </tr>
-      </thead>
-      <tbody id="camiones-body"></tbody>
-    </table>
-  </div>
+    <!-- ========================================== -->
+    <!-- VISTA 4: ANALÍTICA AGGREGATION PIPELINE -->
+    <!-- ========================================== -->
+    <section id="view-stats" class="tab-view">
+      <div class="card">
+        <h2>Reporte Detallado de Gastos de Mantenimiento</h2>
+        <p style="color: #8b949e; font-size: 13px;">
+          Procesado nativamente dentro del motor MongoDB mediante el Aggregation Pipeline <code>[ { $unwind: "$mantenimientos" }, { $group: { _id: "$marca", ... } } ]</code>.
+        </p>
+        <div id="stats-detail-container">
+          <div id="gastos-tabla-clone"></div>
+        </div>
+      </div>
+    </section>
 
-  <script>
-    async function cargarTodo() {
-      await Promise.all([cargarStats(), cargarCamiones(), cargarChoferes(), cargarViajes()]);
-    }
+  </main>
 
-    async function cargarStats() {
-      const res = await fetch('/api/stats/flota');
-      const data = await res.json();
-
-      document.getElementById('kpi-camiones').textContent = data.total_camiones;
-      document.getElementById('kpi-viaje').textContent = data.total_en_viaje;
-      document.getElementById('kpi-km').textContent = `${(data.km_flota_recorridos || 0).toLocaleString()} km`;
-      document.getElementById('kpi-viajes-fin').textContent = data.viajes_finalizados;
-
-      const cont = document.getElementById('gastos-tabla');
-      if (!data.gasto_mantenimiento_por_marca || data.gasto_mantenimiento_por_marca.length === 0) {
-        cont.innerHTML = '<p>Sin servicios registrados aún.</p>';
-        return;
-      }
-
-      let html = '<table><thead><tr><th>Marca</th><th>Servicios</th><th>Total Invertido</th><th>Costo Promedio</th></tr></thead><tbody>';
-      data.gasto_mantenimiento_por_marca.forEach(g => {
-        html += `
-          <tr>
-            <td><strong>${g._id}</strong></td>
-            <td>${g.servicios}</td>
-            <td>$${g.total_gastado.toLocaleString()}</td>
-            <td>$${Math.round(g.costo_promedio).toLocaleString()}</td>
-          </tr>
-        `;
-      });
-      html += '</tbody></table>';
-      cont.innerHTML = html;
-    }
-
-    async function cargarCamiones() {
-      const res = await fetch('/api/camiones');
-      const camiones = await res.json();
-      const tbody = document.getElementById('camiones-body');
-      const selViaje = document.getElementById('viaje-camion');
-      const selMant = document.getElementById('mant-camion');
-
-      tbody.innerHTML = '';
-      selViaje.innerHTML = '<option value="">Seleccione camión disponible...</option>';
-      selMant.innerHTML = '<option value="">Seleccione camión...</option>';
-
-      camiones.forEach(c => {
-        if (c.estado === 'disponible') {
-          selViaje.innerHTML += `<option value="${c.patente}">${c.patente} - ${c.marca} ${c.modelo} (Máx: ${c.capacidad_kg}kg)</option>`;
-        }
-        selMant.innerHTML += `<option value="${c.patente}">${c.patente} - ${c.marca} ${c.modelo} (${c.kilometraje_actual} km)</option>`;
-
-        const mantHtml = (c.mantenimientos || []).map(m => 
-          `<div>• <strong>${m.tipo}</strong> ($${m.costo.toLocaleString()} - ${m.km_servicio} km)</div>`
-        ).join('') || '<em>Sin mantenimientos</em>';
-
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${c.patente}</strong></td>
-            <td>${c.marca} ${c.modelo} (${c.anio})</td>
-            <td>${c.capacidad_kg.toLocaleString()} kg</td>
-            <td>${c.kilometraje_actual.toLocaleString()} km</td>
-            <td><span class="badge-${c.estado}">${c.estado}</span></td>
-            <td>${mantHtml}</td>
-          </tr>
-        `;
-      });
-    }
-
-    async function cargarChoferes() {
-      const res = await fetch('/api/choferes');
-      const choferes = await res.json();
-      const sel = document.getElementById('viaje-chofer');
-      sel.innerHTML = '<option value="">Seleccione chofer disponible...</option>';
-      choferes.forEach(ch => {
-        if (ch.estado === 'disponible') {
-          sel.innerHTML += `<option value="${ch.dni}">${ch.nombre} (DNI: ${ch.dni})</option>`;
-        }
-      });
-    }
-
-    async function cargarViajes() {
-      const res = await fetch('/api/viajes?estado=en_curso');
-      const viajes = await res.json();
-      const tbody = document.getElementById('viajes-body');
-      tbody.innerHTML = '';
-
-      if (viajes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay viajes en tránsito</td></tr>';
-        return;
-      }
-
-      viajes.forEach(v => {
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${v.camion_patente}</strong></td>
-            <td>${v.chofer_nombre}</td>
-            <td>${v.origen} ➔ ${v.destino}</td>
-            <td>${v.carga_descripcion} (${v.peso_kg} kg)</td>
-            <td>
-              <button class="btn-finish" onclick="finalizarViaje('${v._id}', ${v.km_salida})">
-                Llegada
-              </button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    async function finalizarViaje(id, kmSalida) {
-      const km = prompt(`Ingrese odómetro de llegada (Salida fue con: ${kmSalida} km):`, kmSalida + 350);
-      if (!km) return;
-
-      const res = await fetch(`/api/viajes/${id}/finalizar`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ km_llegada: Number(km), observaciones: 'Llegada a destino conforme' })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || 'Error finalizando viaje');
-      } else {
-        cargarTodo();
-      }
-    }
-
-    document.getElementById('form-viaje').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('msg-viaje');
-      msg.textContent = '';
-
-      const payload = {
-        camion_patente: document.getElementById('viaje-camion').value,
-        chofer_dni: document.getElementById('viaje-chofer').value,
-        origen: document.getElementById('viaje-origen').value,
-        destino: document.getElementById('viaje-destino').value,
-        carga_descripcion: document.getElementById('viaje-carga').value,
-        peso_kg: Number(document.getElementById('viaje-peso').value)
-      };
-
-      const res = await fetch('/api/viajes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        msg.textContent = data.error;
-      } else {
-        e.target.reset();
-        cargarTodo();
-      }
-    });
-
-    document.getElementById('form-mant').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('msg-mant');
-      msg.textContent = '';
-      const patente = document.getElementById('mant-camion').value;
-
-      const payload = {
-        tipo: document.getElementById('mant-tipo').value,
-        costo: Number(document.getElementById('mant-costo').value),
-        km_servicio: Number(document.getElementById('mant-km').value),
-        taller: document.getElementById('mant-taller').value
-      };
-
-      const res = await fetch(`/api/camiones/${patente}/mantenimientos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        msg.textContent = data.error;
-      } else {
-        e.target.reset();
-        cargarTodo();
-      }
-    });
-
-    // Carga inicial
-    cargarTodo();
-  </script>
+  <!-- Orquestador Principal ES Modules -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
