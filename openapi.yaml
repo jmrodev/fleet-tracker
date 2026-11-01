@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: Fleet & Logistics Tracker API
+  version: 1.0.0
+  description: API REST para control de flota de camiones, choferes, viajes y mantenimientos en MongoDB.
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Servicio saludable
+          content:
+            application/json:
+              example:
+                status: "ok"
+
+  /api/camiones:
+    get:
+      summary: Listar todos los camiones de la flota
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [disponible, en_viaje, en_mantenimiento]
+      responses:
+        '200':
+          description: Lista de camiones
+    post:
+      summary: Registrar nuevo camión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patente, marca, modelo, anio, capacidad_kg]
+              properties:
+                patente:
+                  type: string
+                  example: "AE123CD"
+                marca:
+                  type: string
+                  example: "Scania"
+                modelo:
+                  type: string
+                  example: "R450"
+                anio:
+                  type: integer
+                  example: 2022
+                capacidad_kg:
+                  type: number
+                  example: 28000
+                kilometraje_actual:
+                  type: number
+                  example: 154000
+      responses:
+        '201':
+          description: Camión registrado
+        '409':
+          description: Conflicto - Patente duplicada
+
+  /api/choferes:
+    get:
+      summary: Listar choferes
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [disponible, asignado, descanso]
+      responses:
+        '200':
+          description: Lista de choferes
+    post:
+      summary: Registrar chofer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dni, nombre, telefono, licencia]
+              properties:
+                dni:
+                  type: string
+                  example: "35444888"
+                nombre:
+                  type: string
+                  example: "Carlos Santana"
+                telefono:
+                  type: string
+                  example: "+542494112233"
+                licencia:
+                  type: object
+                  properties:
+                    categoria:
+                      type: string
+                      example: "E1"
+                    vencimiento:
+                      type: string
+                      format: date
+                      example: "2027-10-15"
+      responses:
+        '201':
+          description: Chofer registrado
+        '409':
+          description: DNI duplicado
+
+  /api/viajes:
+    get:
+      summary: Listar viajes con filtros opcionales
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [planificado, en_curso, finalizado, cancelado]
+      responses:
+        '200':
+          description: Historial y viajes activos
+    post:
+      summary: Iniciar/planificar nuevo viaje
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [camion_patente, chofer_dni, origen, destino, carga_descripcion, peso_kg]
+              properties:
+                camion_patente:
+                  type: string
+                  example: "AE123CD"
+                chofer_dni:
+                  type: string
+                  example: "35444888"
+                origen:
+                  type: string
+                  example: "Tandil, Buenos Aires"
+                destino:
+                  type: string
+                  example: "Puerto Rosario, Santa Fe"
+                carga_descripcion:
+                  type: string
+                  example: "Granos de Soja"
+                peso_kg:
+                  type: number
+                  example: 25000
+                km_salida:
+                  type: number
+                  example: 154000
+      responses:
+        '201':
+          description: Viaje creado y asignado
+        '400':
+          description: Vehículo o Chofer no disponible o sobrecarga de peso
+
+  /api/viajes/{id}/finalizar:
+    put:
+      summary: Completar viaje y registrar llegada
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [km_llegada]
+              properties:
+                km_llegada:
+                  type: number
+                  example: 154560
+                observaciones:
+                  type: string
+                  example: "Viaje sin novedades ni demoras"
+      responses:
+        '200':
+          description: Viaje finalizado y camión/chofer liberados
+        '404':
+          description: Viaje no encontrado
+
+  /api/camiones/{patente}/mantenimientos:
+    post:
+      summary: Registrar orden de servicio/mantenimiento (embebido en el camión con $push)
+      parameters:
+        - name: patente
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tipo, costo, km_servicio]
+              properties:
+                tipo:
+                  type: string
+                  example: "Cambio de aceite y filtros de aire"
+                taller:
+                  type: string
+                  example: "Taller Central Scania"
+                costo:
+                  type: number
+                  example: 185000
+                km_servicio:
+                  type: number
+                  example: 155000
+                detalles:
+                  type: string
+                  example: "Se reemplazaron también pastillas de freno delanteras"
+      responses:
+        '200':
+          description: Mantenimiento asentado exitosamente
+        '404':
+          description: Camión no encontrado
+
+  /api/stats/flota:
+    get:
+      summary: Métricas de flota vía Aggregation Pipeline (costos de mantenimiento y km recorridos)
+      responses:
+        '200':
+          description: Resumen analítico calculado en motor
+          content:
+            application/json:
+              example:
+                total_camiones: 12
+                total_en_viaje: 4
+                gasto_mantenimiento_por_marca:
+                  - _id: "Scania"
+                    total_gastado: 850000
+                    servicios: 5

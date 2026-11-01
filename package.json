@@ -1,0 +1,14 @@
+{
+  "name": "fleet-tracker",
+  "version": "1.0.0",
+  "description": "Sistema de Control de Flota de Camiones, Viajes y Mantenimiento con MongoDB (Spec-First)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/integration.test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0"
+  }
+}
