@@ -1,6 +1,7 @@
 // public/js/views/camiones.js - Vista dedicada de Camiones & Mantenimiento (Harden)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
+import { openModal, closeModal } from '../app.js';
 
 export async function initCamionesView() {
   bindFormNuevoCamion();
@@ -133,9 +134,22 @@ function renderTablaCamiones(camiones) {
   }
 
   camiones.forEach(c => {
-    const mantHtml = (c.mantenimientos || []).map(m => 
-      `<div class="truncate-cell" title="${m.tipo} ($${m.costo.toLocaleString()} - ${m.km_servicio.toLocaleString()} km) [${m.taller}]">• <strong>${m.tipo}</strong> ($${m.costo.toLocaleString()}) [${m.taller}]</div>`
-    ).join('') || '<em style="color:var(--text-muted)">Sin intervenciones</em>';
+    const mantenimientos = c.mantenimientos || [];
+    const count = mantenimientos.length;
+    const totalCosto = mantenimientos.reduce((acc, m) => acc + (m.costo || 0), 0);
+
+    let mantCellHtml = '';
+    if (count === 0) {
+      mantCellHtml = '<span style="color:var(--text-muted); font-size:12px;">Sin intervenciones</span>';
+    } else {
+      mantCellHtml = `
+        <button type="button" class="badge-mant-summary btn-ver-mant" data-patente="${c.patente}" title="Ver historial detallado de ${c.patente}">
+          <span>🔧</span>
+          <strong>${count} ${count === 1 ? 'servicio' : 'servicios'}</strong>
+          <span style="color:var(--blue-text); font-family:var(--font-mono); font-size:11px;">($${totalCosto.toLocaleString()})</span>
+        </button>
+      `;
+    }
 
     const fotoImg = c.foto_url 
       ? `<img src="${c.foto_url}" class="truck-thumb" alt="${c.patente}" loading="lazy">`
@@ -149,17 +163,79 @@ function renderTablaCamiones(camiones) {
       <td style="font-family: var(--font-mono);">${c.capacidad_kg.toLocaleString()} kg</td>
       <td style="font-family: var(--font-mono);">${c.kilometraje_actual.toLocaleString()} km</td>
       <td><span class="badge-${c.estado}">${c.estado}</span></td>
-      <td>${mantHtml}</td>
+      <td>${mantCellHtml}</td>
       <td style="white-space: nowrap;">
         <button class="btn-secondary btn-edit-camion" style="padding: 4px 8px; font-size: 11px;">✏️ Editar</button>
         <button class="btn-danger btn-del-camion" style="padding: 4px 8px; font-size: 11px;">🗑️ Eliminar</button>
       </td>
     `;
 
+    const btnVerMant = tr.querySelector('.btn-ver-mant');
+    if (btnVerMant) {
+      btnVerMant.addEventListener('click', () => mostrarHistorialMantenimiento(c));
+    }
+
     tr.querySelector('.btn-edit-camion').addEventListener('click', () => editarCamion(c));
     tr.querySelector('.btn-del-camion').addEventListener('click', () => borrarCamion(c.patente));
     tbody.appendChild(tr);
   });
+}
+
+function mostrarHistorialMantenimiento(camion) {
+  const modal = document.getElementById('modal-historial-mant');
+  if (!modal) return;
+
+  const titulo = document.getElementById('modal-historial-titulo');
+  const subtitulo = document.getElementById('modal-historial-subtitulo');
+  const container = document.getElementById('modal-historial-content');
+  const btnNuevo = document.getElementById('btn-modal-historial-nuevo');
+
+  if (titulo) titulo.textContent = `🔧 Hoja de Vida: ${camion.patente}`;
+  if (subtitulo) subtitulo.textContent = `${camion.marca} ${camion.modelo} (${camion.anio}) — Odómetro actual: ${camion.kilometraje_actual.toLocaleString()} km`;
+
+  const mantenimientos = camion.mantenimientos || [];
+  if (container) {
+    if (mantenimientos.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 24px 12px; color: var(--text-muted);">
+          <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+          <div>No se registran intervenciones de mantenimiento para esta unidad.</div>
+        </div>
+      `;
+    } else {
+      const itemsHtml = mantenimientos.map((m, idx) => {
+        const fechaStr = m.fecha ? new Date(m.fecha).toLocaleDateString() : 'Fecha no especificada';
+        return `
+          <div class="mant-item-card">
+            <div class="mant-item-header">
+              <strong>${m.tipo || 'Mantenimiento General'}</strong>
+              <span class="mant-item-cost">$${(m.costo || 0).toLocaleString()}</span>
+            </div>
+            <div class="mant-item-meta">
+              <span>📅 ${fechaStr}</span>
+              <span>🛣️ ${(m.km_servicio || 0).toLocaleString()} km</span>
+              <span>🏢 ${m.taller || 'Taller Interno'}</span>
+            </div>
+            ${m.detalles ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">📝 ${m.detalles}</div>` : ''}
+          </div>
+        `;
+      }).reverse().join('');
+      container.innerHTML = itemsHtml;
+    }
+  }
+
+  if (btnNuevo) {
+    btnNuevo.onclick = () => {
+      closeModal('modal-historial-mant');
+      const selCamion = document.getElementById('mant-camion');
+      if (selCamion) {
+        selCamion.value = camion.patente;
+      }
+      openModal('modal-mant');
+    };
+  }
+
+  openModal('modal-historial-mant');
 }
 
 async function editarCamion(c) {

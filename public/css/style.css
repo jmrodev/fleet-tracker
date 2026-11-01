@@ -514,3 +514,60 @@ button[type="submit"]:hover:not(:disabled) {
 .modal-close:hover {
   color: var(--text-primary);
 }
+
+/* Badge de Historial de Mantenimientos y Timeline en Modal */
+.badge-mant-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.badge-mant-summary:hover {
+  background-color: var(--surface-row-hover);
+  border-color: var(--blue-text);
+  color: var(--blue-text);
+}
+
+.mant-item-card {
+  background-color: var(--surface-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.mant-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.mant-item-header strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.mant-item-cost {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--blue-text);
+  font-size: 13px;
+}
+
+.mant-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
