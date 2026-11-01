@@ -10,6 +10,7 @@
   --green-signal: #1a7f37;
   --green-hover: #14622b;
   --blue-route: #2f81f7;
+  --blue-hover: #1f6feb;
   --amber-signal: #d29922;
   --red-danger: #da3633;
   --red-hover: #f85149;
@@ -21,6 +22,31 @@
   box-sizing: border-box;
 }
 
+/* 1. Craft-Floor: Theming de Superficies del Navegador */
+::selection {
+  background-color: rgba(47, 129, 247, 0.35);
+  color: #ffffff;
+}
+
+/* Scrollbars temáticas industriales */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #30363d;
+}
+
 body {
   font-family: var(--font-sans);
   margin: 0;
@@ -29,6 +55,7 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Header de Operaciones */
@@ -60,13 +87,14 @@ header.app-header {
   font-size: 0.8rem;
 }
 
-/* Navegación de Pestañas (Clean & High Contrast) */
+/* Navegación de Pestañas */
 nav.view-tabs-bar {
   background-color: var(--surface-panel);
   border-bottom: 1px solid var(--border-subtle);
   padding: 0 24px;
   display: flex;
   gap: 4px;
+  overflow-x: auto;
 }
 
 button.view-tab {
@@ -81,6 +109,7 @@ button.view-tab {
   transition: color 0.15s ease, border-color 0.15s ease;
   width: auto;
   margin: 0;
+  white-space: nowrap;
 }
 
 button.view-tab:hover {
@@ -107,7 +136,7 @@ main.main-container {
   display: block;
 }
 
-/* Cinta Ejecutiva de KPIs (Ribbon en vez del cliché de cards aisladas) */
+/* Cinta Ejecutiva de KPIs (Ribbon) */
 .kpi-grid {
   display: flex;
   flex-wrap: wrap;
@@ -134,6 +163,7 @@ main.main-container {
   font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .kpi-lbl {
@@ -145,7 +175,7 @@ main.main-container {
   margin-top: 2px;
 }
 
-/* Paneles Estructurados */
+/* Grillas y Paneles */
 .grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -175,7 +205,13 @@ main.main-container {
   letter-spacing: -0.01em;
 }
 
-/* Tablas Operativas de Alta Densidad */
+/* Adaptabilidad y Contención de Tablas (Adapt) */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -195,13 +231,22 @@ th {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 tbody tr:hover {
   background-color: var(--surface-row-hover);
 }
 
-/* Controles de Formulario */
+/* Truncamiento Seguro contra Desbordes (Harden) */
+.truncate-cell {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Form Controls */
 label {
   display: block;
   font-size: 12px;
@@ -222,12 +267,12 @@ input, select, textarea {
   width: 100%;
 }
 
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--border-focus);
+/* Foco Accesible por Teclado (Craft-Floor) */
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
-/* Botones con Contraste Accesible Calibrado */
 button {
   display: inline-flex;
   align-items: center;
@@ -239,7 +284,12 @@ button {
   border-radius: 4px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 button[type="submit"] {
@@ -249,9 +299,8 @@ button[type="submit"] {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-button[type="submit"]:hover {
+button[type="submit"]:hover:not(:disabled) {
   background-color: var(--green-hover);
-  color: #ffffff;
 }
 
 .btn-secondary {
@@ -262,9 +311,8 @@ button[type="submit"]:hover {
   margin-bottom: 0;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background-color: var(--surface-row-hover);
-  color: #ffffff;
   border-color: #3b455b;
 }
 
@@ -274,12 +322,11 @@ button[type="submit"]:hover {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
   background-color: var(--red-hover);
-  color: #ffffff;
 }
 
-/* Badges de Estado Operativo */
+/* Badges Operativos */
 .badge-disponible, .badge-en_viaje, .badge-en_mantenimiento, .badge-asignado, .badge-descanso, .badge-finalizado {
   display: inline-block;
   padding: 2px 8px;
@@ -288,6 +335,7 @@ button[type="submit"]:hover {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  font-family: var(--font-mono);
 }
 
 .badge-disponible {
@@ -314,7 +362,7 @@ button[type="submit"]:hover {
   border: 1px solid rgba(139, 148, 158, 0.3);
 }
 
-/* Miniaturas de Vehículos y Choferes */
+/* Miniaturas */
 .truck-thumb, .driver-thumb {
   width: 48px;
   height: 48px;
@@ -328,6 +376,24 @@ button[type="submit"]:hover {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+}
+
+/* Empty States Diseñados (Harden) */
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.empty-state-text {
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 /* Mensajes de Feedback */
