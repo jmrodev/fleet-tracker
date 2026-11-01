@@ -1,0 +1,65 @@
+name: CI & Contract Quality Gate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Spec-First & MongoDB Integration
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: secretpassword
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh admin --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Hurl
+        run: |
+          curl --location --remote-name https://github.com/Orange-OpenSource/hurl/releases/download/4.3.0/hurl_4.3.0_amd64.deb
+          sudo dpkg -i hurl_4.3.0_amd64.deb
+
+      - name: Install Stoplight Prism (Spec-First Mock Server)
+        run: npm install -g @stoplight/prism-cli
+
+      - name: Start Prism Mock Server
+        run: |
+          prism mock openapi.yaml --port 4010 &
+          sleep 3
+
+      - name: Run Spec-First Contract Tests (Hurl)
+        run: hurl --test tests/001_contract.hurl
+
+      - name: Start Backend Server
+        run: |
+          node server.js &
+          sleep 3
+
+      - name: Run MongoDB Direct Integration Tests
+        run: npm test
