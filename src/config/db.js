@@ -57,6 +57,7 @@ async function sembrarDatosIniciales() {
       anio: 2022,
       capacidad_kg: 28000,
       kilometraje_actual: 145000,
+      foto_url: '/images/camiones/scania.jpg',
       estado: 'disponible',
       mantenimientos: [
         {
@@ -78,6 +79,7 @@ async function sembrarDatosIniciales() {
       anio: 2023,
       capacidad_kg: 30000,
       kilometraje_actual: 82000,
+      foto_url: '/images/camiones/mercedes.jpg',
       estado: 'disponible',
       mantenimientos: [
         {
@@ -99,6 +101,7 @@ async function sembrarDatosIniciales() {
       anio: 2021,
       capacidad_kg: 32000,
       kilometraje_actual: 210000,
+      foto_url: '/images/camiones/volvo.jpg',
       estado: 'disponible',
       mantenimientos: [
         {
@@ -120,6 +123,7 @@ async function sembrarDatosIniciales() {
       dni: '35111222',
       nombre: 'Horacio Molina',
       telefono: '+54 249 455-1234',
+      foto_url: '/images/choferes/horacio.jpg',
       licencia: { categoria: 'E1', vencimiento: '2027-08-15' },
       estado: 'disponible',
       creado_en: new Date()
@@ -128,6 +132,7 @@ async function sembrarDatosIniciales() {
       dni: '38333444',
       nombre: 'Esteban Benítez',
       telefono: '+54 249 466-5678',
+      foto_url: '/images/choferes/esteban.jpg',
       licencia: { categoria: 'E1', vencimiento: '2026-12-10' },
       estado: 'disponible',
       creado_en: new Date()
