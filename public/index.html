@@ -59,8 +59,11 @@
     <section id="view-dashboard" class="tab-view active">
       <div class="grid-2col">
         <div class="card">
-          <h2>🛣️ Viajes en Tránsito Inmediato</h2>
-          <p style="color: #8b949e; font-size: 13px;">Unidades actualmente en ruta hacia destino.</p>
+          <div class="panel-header">
+            <h2>🛣️ Viajes en Tránsito Inmediato</h2>
+            <button id="btn-open-modal-viaje-dash" class="btn-primary-action">+ Nuevo Viaje</button>
+          </div>
+          <p style="color: var(--text-muted); font-size: 13px;">Unidades actualmente en ruta hacia destino.</p>
           <div class="table-responsive">
             <table>
               <thead>
@@ -79,7 +82,7 @@
 
         <div class="card">
           <h2>📈 Inversión en Mantenimiento por Marca</h2>
-          <p style="color: #8b949e; font-size: 13px;">Pipeline <code>$unwind</code> y <code>$group</code> en MongoDB.</p>
+          <p style="color: var(--text-muted); font-size: 13px;">Pipeline <code>$unwind</code> y <code>$group</code> en MongoDB.</p>
           <div id="gastos-tabla">Cargando métricas...</div>
         </div>
       </div>
@@ -89,38 +92,28 @@
     <!-- VISTA 2: DESPACHO & SEGUIMIENTO DE VIAJES -->
     <!-- ========================================== -->
     <section id="view-viajes" class="tab-view">
-      <div class="grid-2col">
-        <div class="card">
-          <h2>Despachar Nuevo Viaje</h2>
-          <form id="form-viaje">
-            <label style="color:#8b949e; font-size:12px;">Camión Disponible:</label>
-            <select id="viaje-camion" required></select>
-
-            <label style="color:#8b949e; font-size:12px;">Chofer Disponible:</label>
-            <select id="viaje-chofer" required></select>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <input type="text" id="viaje-origen" placeholder="Origen (ej: Tandil)" required>
-              <input type="text" id="viaje-destino" placeholder="Destino (ej: Rosario)" required>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
-              <input type="text" id="viaje-carga" placeholder="Carga (ej: Granos de Soja)" required>
-              <input type="number" id="viaje-peso" placeholder="Peso (Kg)" required>
-            </div>
-
-            <button type="submit">Iniciar Despacho</button>
-            <div id="msg-viaje" class="error-box"></div>
-          </form>
+      <div class="card">
+        <div class="panel-header">
+          <div>
+            <h2>🛣️ Consola de Despacho y Monitoreo de Viajes</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Unidades en curso y control de entrega en destino.</p>
+          </div>
+          <button id="btn-open-modal-viaje" class="btn-primary-action">🚀 Despachar Nuevo Viaje</button>
         </div>
 
-        <div class="card">
-          <h2>Reglas Operativas de Viajes</h2>
-          <ul style="color: #8b949e; font-size: 13px; line-height: 1.6; padding-left: 18px;">
-            <li><strong>Validación de Peso:</strong> No se permite despachar una carga que exceda la <code>capacidad_kg</code> de la unidad asignada.</li>
-            <li><strong>Atomicidad Concurrente:</strong> La asignación del camión y chofer se ejecuta mediante Compare-and-Swap atómico en el motor MongoDB.</li>
-            <li><strong>Odometría Real:</strong> Al finalizar el viaje, el odómetro de llegada computa los kilómetros y libera ambos recursos a <code>disponible</code>.</li>
-          </ul>
+        <div class="table-responsive" style="margin-top: 16px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Camión</th>
+                <th>Chofer</th>
+                <th>Trayecto</th>
+                <th>Carga</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="viajes-body-dedicated"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -129,54 +122,19 @@
     <!-- VISTA 3: CAMIONES & FLOTA (Página dedicada) -->
     <!-- ========================================== -->
     <section id="view-camiones" class="tab-view">
-      <div class="grid-2col">
-        <!-- Alta de Camión (Create) -->
-        <div class="card">
-          <h2>➕ Registrar Nuevo Camión</h2>
-          <form id="form-camion">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <input type="text" id="camion-patente" placeholder="Patente (ej: AG999ZZ)" required>
-              <input type="text" id="camion-marca" placeholder="Marca (ej: Scania)" required>
-            </div>
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
-              <input type="text" id="camion-modelo" placeholder="Modelo (ej: R500 V8)" required>
-              <input type="number" id="camion-anio" placeholder="Año" value="2024" required>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <input type="number" id="camion-capacidad" placeholder="Capacidad (Kg)" required>
-              <input type="number" id="camion-km" placeholder="Odómetro inicial (Km)">
-            </div>
-            <input type="text" id="camion-foto" placeholder="URL Foto (ej: /images/camiones/scania.jpg)">
-            <button type="submit">Guardar Camión</button>
-            <div id="msg-camion" class="error-box"></div>
-          </form>
-        </div>
-
-        <!-- Registrar Mantenimiento Preventivo -->
-        <div class="card">
-          <h2>🔧 Asentar Mantenimiento ($push Embebido)</h2>
-          <form id="form-mant">
-            <label style="color:#8b949e; font-size:12px;">Camión a intervenir:</label>
-            <select id="mant-camion" required></select>
-
-            <input type="text" id="mant-tipo" placeholder="Tipo de Servicio (ej: Cambio de Frenos y Filtros)" required>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <input type="number" id="mant-costo" placeholder="Costo ($)" required>
-              <input type="number" id="mant-km" placeholder="Km al momento del servicio" required>
-            </div>
-
-            <input type="text" id="mant-taller" placeholder="Taller / Concesionario Oficial">
-            <button type="submit">Asentar en Hoja de Vida Embebida</button>
-            <div id="msg-mant" class="error-box"></div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Inventario de Camiones con Mantenimientos Embebidos -->
       <div class="card">
-        <h2>Inventario General de Unidades y Mantenimientos Embebidos</h2>
-        <div class="table-responsive">
+        <div class="panel-header">
+          <div>
+            <h2>🚚 Inventario General de Unidades y Mantenimientos Embebidos</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Flota pesada, odometría en tiempo real y hojas de vida en MongoDB.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-open-modal-mant" class="btn-secondary">🔧 Asentar Mantenimiento</button>
+            <button id="btn-open-modal-camion" class="btn-primary-action">➕ Nuevo Camión</button>
+          </div>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 16px;">
           <table>
             <thead>
               <tr>
@@ -200,29 +158,16 @@
     <!-- VISTA 4: CHOFERES & NÓMINA (Página dedicada) -->
     <!-- ========================================== -->
     <section id="view-choferes" class="tab-view">
-      <!-- Alta de Chofer (Create) -->
-      <div class="card" style="margin-bottom: 24px;">
-        <h2>➕ Registrar Nuevo Chofer</h2>
-        <form id="form-chofer">
-          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
-            <input type="text" id="chofer-dni" placeholder="DNI (ej: 40123456)" required>
-            <input type="text" id="chofer-nombre" placeholder="Nombre completo" required>
-          </div>
-          <input type="text" id="chofer-tel" placeholder="Teléfono de contacto" required>
-          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
-            <input type="text" id="chofer-lic-cat" placeholder="Categoría (ej: E1)" value="E1" required>
-            <input type="date" id="chofer-lic-venc" placeholder="Vencimiento" required>
-          </div>
-          <input type="text" id="chofer-foto" placeholder="URL Foto (ej: /images/choferes/horacio.jpg)">
-          <button type="submit">Guardar Chofer</button>
-          <div id="msg-chofer" class="error-box"></div>
-        </form>
-      </div>
-
-      <!-- Nómina de Choferes -->
       <div class="card">
-        <h2>Nómina de Choferes y Licencias Profesionales</h2>
-        <div class="table-responsive">
+        <div class="panel-header">
+          <div>
+            <h2>👤 Nómina de Choferes y Licencias Profesionales</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Registro de conductores, categorías de habilitación (E1, E2) y vigencias.</p>
+          </div>
+          <button id="btn-open-modal-chofer" class="btn-primary-action">➕ Registrar Chofer</button>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 16px;">
           <table>
             <thead>
               <tr>
@@ -247,7 +192,7 @@
     <section id="view-stats" class="tab-view">
       <div class="card">
         <h2>Reporte Detallado de Gastos de Mantenimiento</h2>
-        <p style="color: #8b949e; font-size: 13px;">
+        <p style="color: var(--text-muted); font-size: 13px;">
           Procesado nativamente dentro del motor MongoDB mediante el Aggregation Pipeline <code>[ { $unwind: "$mantenimientos" }, { $group: { _id: "$marca", ... } } ]</code>.
         </p>
         <div id="stats-detail-container">
@@ -257,6 +202,184 @@
     </section>
 
   </main>
+
+  <!-- ========================================== -->
+  <!-- MODALES INTERACTIVOS (ACCESIBLES Y FLUIDOS) -->
+  <!-- ========================================== -->
+
+  <!-- 1. Modal Despacho de Viaje -->
+  <div id="modal-viaje" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🚀 Despachar Nuevo Viaje</h3>
+        <button class="modal-close" data-close="modal-viaje">&times;</button>
+      </div>
+      <form id="form-viaje">
+        <label>Camión Disponible:</label>
+        <select id="viaje-camion" required></select>
+
+        <label>Chofer Disponible:</label>
+        <select id="viaje-chofer" required></select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label>Origen:</label>
+            <input type="text" id="viaje-origen" placeholder="ej: Tandil" required>
+          </div>
+          <div>
+            <label>Destino:</label>
+            <input type="text" id="viaje-destino" placeholder="ej: Rosario" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+          <div>
+            <label>Descripción Carga:</label>
+            <input type="text" id="viaje-carga" placeholder="ej: Granos de Soja" required>
+          </div>
+          <div>
+            <label>Peso (Kg):</label>
+            <input type="number" id="viaje-peso" placeholder="ej: 28000" required>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-secondary" data-close="modal-viaje">Cancelar</button>
+          <button type="submit" class="btn-primary-action" style="width: auto;">Iniciar Despacho</button>
+        </div>
+        <div id="msg-viaje" class="error-box"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Modal Nuevo Camión -->
+  <div id="modal-camion" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>➕ Registrar Nuevo Camión en Flota</h3>
+        <button class="modal-close" data-close="modal-camion">&times;</button>
+      </div>
+      <form id="form-camion">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label>Patente:</label>
+            <input type="text" id="camion-patente" placeholder="ej: AG999ZZ" required>
+          </div>
+          <div>
+            <label>Marca:</label>
+            <input type="text" id="camion-marca" placeholder="ej: Scania" required>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+          <div>
+            <label>Modelo:</label>
+            <input type="text" id="camion-modelo" placeholder="ej: R500 V8" required>
+          </div>
+          <div>
+            <label>Año:</label>
+            <input type="number" id="camion-anio" value="2024" required>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label>Capacidad (Kg):</label>
+            <input type="number" id="camion-capacidad" placeholder="ej: 28000" required>
+          </div>
+          <div>
+            <label>Odómetro Inicial (Km):</label>
+            <input type="number" id="camion-km" placeholder="ej: 120000">
+          </div>
+        </div>
+        <label>URL / Ruta Foto:</label>
+        <input type="text" id="camion-foto" placeholder="ej: /images/camiones/scania.jpg">
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-secondary" data-close="modal-camion">Cancelar</button>
+          <button type="submit" class="btn-primary-action" style="width: auto;">Guardar Camión</button>
+        </div>
+        <div id="msg-camion" class="error-box"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Modal Asentar Mantenimiento -->
+  <div id="modal-mant" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🔧 Asentar Mantenimiento Preventivo ($push)</h3>
+        <button class="modal-close" data-close="modal-mant">&times;</button>
+      </div>
+      <form id="form-mant">
+        <label>Unidad a intervenir:</label>
+        <select id="mant-camion" required></select>
+
+        <label>Tipo de Intervención:</label>
+        <input type="text" id="mant-tipo" placeholder="ej: Cambio de aceite sintético y filtros" required>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label>Costo ($):</label>
+            <input type="number" id="mant-costo" placeholder="ej: 250000" required>
+          </div>
+          <div>
+            <label>Km al momento del servicio:</label>
+            <input type="number" id="mant-km" placeholder="ej: 145000" required>
+          </div>
+        </div>
+
+        <label>Taller / Concesionario:</label>
+        <input type="text" id="mant-taller" placeholder="ej: Scania Oficial Tandil">
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-secondary" data-close="modal-mant">Cancelar</button>
+          <button type="submit" class="btn-primary-action" style="width: auto;">Asentar en Hoja de Vida</button>
+        </div>
+        <div id="msg-mant" class="error-box"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Modal Nuevo Chofer -->
+  <div id="modal-chofer" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>👤 Registrar Nuevo Chofer en Nómina</h3>
+        <button class="modal-close" data-close="modal-chofer">&times;</button>
+      </div>
+      <form id="form-chofer">
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+          <div>
+            <label>DNI:</label>
+            <input type="text" id="chofer-dni" placeholder="ej: 38123456" required>
+          </div>
+          <div>
+            <label>Nombre y Apellido:</label>
+            <input type="text" id="chofer-nombre" placeholder="ej: Horacio Molina" required>
+          </div>
+        </div>
+        <label>Teléfono:</label>
+        <input type="text" id="chofer-tel" placeholder="ej: +54 249 455-1234" required>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+          <div>
+            <label>Categoría Licencia:</label>
+            <input type="text" id="chofer-lic-cat" value="E1" required>
+          </div>
+          <div>
+            <label>Fecha Vencimiento:</label>
+            <input type="date" id="chofer-lic-venc" required>
+          </div>
+        </div>
+        <label>URL / Ruta Foto:</label>
+        <input type="text" id="chofer-foto" placeholder="ej: /images/choferes/horacio.jpg">
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-secondary" data-close="modal-chofer">Cancelar</button>
+          <button type="submit" class="btn-primary-action" style="width: auto;">Guardar Chofer</button>
+        </div>
+        <div id="msg-chofer" class="error-box"></div>
+      </form>
+    </div>
+  </div>
 
   <!-- Orquestador Principal ES Modules -->
   <script type="module" src="js/app.js"></script>

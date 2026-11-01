@@ -39,6 +39,10 @@ function bindFormNuevoChofer() {
         e.target.reset();
         msg.className = 'success-box';
         msg.textContent = '✓ Chofer dado de alta con éxito (Índice único verificado en motor).';
+        setTimeout(() => {
+          const modal = document.getElementById('modal-chofer');
+          if (modal) modal.classList.remove('active');
+        }, 800);
         await renderChoferes();
         await renderKPIs();
       } catch (err) {
