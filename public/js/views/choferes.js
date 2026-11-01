@@ -1,4 +1,4 @@
-// public/js/views/choferes.js - Vista dedicada e independiente de Choferes & Licencias
+// public/js/views/choferes.js - Vista dedicada e independiente de Choferes (Harden)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 
@@ -13,9 +13,15 @@ function bindFormNuevoChofer() {
     form.dataset.bound = 'true';
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = form.querySelector('button[type="submit"]');
       const msg = document.getElementById('msg-chofer');
       msg.textContent = '';
       msg.className = 'error-box';
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Registrando Chofer...';
+      }
 
       try {
         const payload = {
@@ -37,6 +43,11 @@ function bindFormNuevoChofer() {
         await renderKPIs();
       } catch (err) {
         msg.textContent = err.message;
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Guardar Chofer';
+        }
       }
     });
   }
@@ -53,26 +64,33 @@ function renderTablaChoferes(choferes) {
 
   tbody.innerHTML = '';
   if (!choferes.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay choferes registrados</td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-state">
+          <div class="empty-state-icon">👤</div>
+          <div class="empty-state-text">No hay choferes registrados en la nómina. Complete el formulario para incorporar conductores.</div>
+        </td>
+      </tr>
+    `;
     return;
   }
 
   choferes.forEach(ch => {
     const fotoImg = ch.foto_url 
-      ? `<img src="${ch.foto_url}" class="driver-thumb" alt="${ch.nombre}">`
-      : `<div class="driver-thumb" style="background:#21262d; display:flex; align-items:center; justify-content:center; font-size:1rem;">👤</div>`;
+      ? `<img src="${ch.foto_url}" class="driver-thumb" alt="${ch.nombre}" loading="lazy">`
+      : `<div class="driver-thumb" style="display:flex; align-items:center; justify-content:center; font-size:1rem;">👤</div>`;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="width: 50px;">${fotoImg}</td>
-      <td><strong>${ch.dni}</strong></td>
+      <td><strong style="font-family: var(--font-mono);">${ch.dni}</strong></td>
       <td>${ch.nombre}</td>
       <td>${ch.telefono}</td>
-      <td>Licencia: ${ch.licencia.categoria} (Vence: ${ch.licencia.vencimiento})</td>
+      <td><span style="font-family: var(--font-mono);">Licencia ${ch.licencia.categoria}</span> (Vence: ${ch.licencia.vencimiento})</td>
       <td><span class="badge-${ch.estado}">${ch.estado}</span></td>
       <td style="white-space: nowrap;">
         <button class="btn-secondary btn-edit-chofer" style="padding: 4px 8px; font-size: 11px;">✏️ Editar</button>
-        <button class="btn-danger btn-del-chofer" style="padding: 4px 8px; font-size: 11px; background:#da3633; color:#fff;">🗑️ Eliminar</button>
+        <button class="btn-danger btn-del-chofer" style="padding: 4px 8px; font-size: 11px;">🗑️ Eliminar</button>
       </td>
     `;
 

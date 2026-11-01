@@ -1,4 +1,4 @@
-// public/js/views/camiones.js - Vista dedicada e independiente de Camiones & Mantenimiento
+// public/js/views/camiones.js - Vista dedicada de Camiones & Mantenimiento (Harden)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 
@@ -14,9 +14,15 @@ function bindFormNuevoCamion() {
     form.dataset.bound = 'true';
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = form.querySelector('button[type="submit"]');
       const msg = document.getElementById('msg-camion');
       msg.textContent = '';
       msg.className = 'error-box';
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Registrando...';
+      }
 
       try {
         const payload = {
@@ -37,6 +43,11 @@ function bindFormNuevoCamion() {
         await renderKPIs();
       } catch (err) {
         msg.textContent = err.message;
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Guardar Camión';
+        }
       }
     });
   }
@@ -48,11 +59,22 @@ function bindFormMantenimiento() {
     formMant.dataset.bound = 'true';
     formMant.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = formMant.querySelector('button[type="submit"]');
       const msg = document.getElementById('msg-mant');
       msg.textContent = '';
       msg.className = 'error-box';
 
       const patente = document.getElementById('mant-camion').value;
+      if (!patente) {
+        msg.textContent = 'Debe seleccionar un camión de la flota.';
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Asentando en MongoDB...';
+      }
+
       const payload = {
         tipo: document.getElementById('mant-tipo').value,
         costo: Number(document.getElementById('mant-costo').value),
@@ -69,6 +91,11 @@ function bindFormMantenimiento() {
         await renderKPIs();
       } catch (err) {
         msg.textContent = err.message;
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Asentar en Hoja de Vida Embebida';
+        }
       }
     });
   }
@@ -86,31 +113,38 @@ function renderTablaCamiones(camiones) {
 
   tbody.innerHTML = '';
   if (!camiones.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No hay camiones registrados</td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="empty-state">
+          <div class="empty-state-icon">🚚</div>
+          <div class="empty-state-text">No hay camiones registrados en la base de datos. Utilice el formulario superior para incorporar unidades.</div>
+        </td>
+      </tr>
+    `;
     return;
   }
 
   camiones.forEach(c => {
     const mantHtml = (c.mantenimientos || []).map(m => 
-      `<div>• <strong>${m.tipo}</strong> ($${m.costo.toLocaleString()} - ${m.km_servicio.toLocaleString()} km) [${m.taller}]</div>`
-    ).join('') || '<em style="color:#8b949e">Sin mantenimientos</em>';
+      `<div class="truncate-cell" title="${m.tipo} ($${m.costo.toLocaleString()} - ${m.km_servicio.toLocaleString()} km) [${m.taller}]">• <strong>${m.tipo}</strong> ($${m.costo.toLocaleString()}) [${m.taller}]</div>`
+    ).join('') || '<em style="color:var(--text-muted)">Sin intervenciones</em>';
 
     const fotoImg = c.foto_url 
-      ? `<img src="${c.foto_url}" class="truck-thumb" alt="${c.patente}">`
-      : `<div class="truck-thumb" style="background:#21262d; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">🚛</div>`;
+      ? `<img src="${c.foto_url}" class="truck-thumb" alt="${c.patente}" loading="lazy">`
+      : `<div class="truck-thumb" style="display:flex; align-items:center; justify-content:center; font-size:1.2rem;">🚛</div>`;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td style="width: 70px;">${fotoImg}</td>
-      <td><strong>${c.patente}</strong></td>
+      <td style="width: 58px;">${fotoImg}</td>
+      <td><strong style="font-family: var(--font-mono);">${c.patente}</strong></td>
       <td>${c.marca} ${c.modelo} (${c.anio})</td>
-      <td>${c.capacidad_kg.toLocaleString()} kg</td>
-      <td>${c.kilometraje_actual.toLocaleString()} km</td>
+      <td style="font-family: var(--font-mono);">${c.capacidad_kg.toLocaleString()} kg</td>
+      <td style="font-family: var(--font-mono);">${c.kilometraje_actual.toLocaleString()} km</td>
       <td><span class="badge-${c.estado}">${c.estado}</span></td>
       <td>${mantHtml}</td>
       <td style="white-space: nowrap;">
         <button class="btn-secondary btn-edit-camion" style="padding: 4px 8px; font-size: 11px;">✏️ Editar</button>
-        <button class="btn-danger btn-del-camion" style="padding: 4px 8px; font-size: 11px; background:#da3633; color:#fff;">🗑️ Eliminar</button>
+        <button class="btn-danger btn-del-camion" style="padding: 4px 8px; font-size: 11px;">🗑️ Eliminar</button>
       </td>
     `;
 

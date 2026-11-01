@@ -1,4 +1,4 @@
-// public/js/views/viajes.js - Vista de Despacho y Seguimiento de Viajes
+// public/js/views/viajes.js - Vista de Despacho y Seguimiento de Viajes (Harden)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 
@@ -8,9 +8,16 @@ export async function initViajesView() {
     formViaje.dataset.bound = 'true';
     formViaje.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = formViaje.querySelector('button[type="submit"]');
       const msg = document.getElementById('msg-viaje');
       msg.textContent = '';
       msg.className = 'error-box';
+
+      // Harden: Prevención de doble despacho concurrente
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Despachando unidad...';
+      }
 
       try {
         const payload = {
@@ -25,11 +32,16 @@ export async function initViajesView() {
         await api.despacharViaje(payload);
         e.target.reset();
         msg.className = 'success-box';
-        msg.textContent = '✓ Viaje despachado correctamente.';
+        msg.textContent = '✓ Viaje despachado y registrado atómicamente.';
         await renderViajes();
         await renderKPIs();
       } catch (err) {
         msg.textContent = err.message;
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Iniciar Despacho';
+        }
       }
     });
   }
@@ -52,16 +64,24 @@ async function actualizarSelectores() {
 
   if (selCamion) {
     selCamion.innerHTML = '<option value="">Seleccione camión disponible...</option>';
-    camiones.forEach(c => {
-      selCamion.innerHTML += `<option value="${c.patente}">${c.patente} - ${c.marca} ${c.modelo} (Máx: ${c.capacidad_kg}kg)</option>`;
-    });
+    if (camiones.length === 0) {
+      selCamion.innerHTML = '<option value="">⚠️ No hay camiones disponibles en este momento</option>';
+    } else {
+      camiones.forEach(c => {
+        selCamion.innerHTML += `<option value="${c.patente}">${c.patente} - ${c.marca} ${c.modelo} (Máx: ${c.capacidad_kg.toLocaleString()} kg)</option>`;
+      });
+    }
   }
 
   if (selChofer) {
     selChofer.innerHTML = '<option value="">Seleccione chofer disponible...</option>';
-    choferes.forEach(ch => {
-      selChofer.innerHTML += `<option value="${ch.dni}">${ch.nombre} (DNI: ${ch.dni})</option>`;
-    });
+    if (choferes.length === 0) {
+      selChofer.innerHTML = '<option value="">⚠️ No hay choferes disponibles en este momento</option>';
+    } else {
+      choferes.forEach(ch => {
+        selChofer.innerHTML += `<option value="${ch.dni}">${ch.nombre} (DNI: ${ch.dni})</option>`;
+      });
+    }
   }
 }
 
@@ -74,40 +94,48 @@ async function renderTablaViajes() {
     tbody.innerHTML = '';
 
     if (viajes.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: #8b949e;">No hay viajes en tránsito actualmente</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-state">
+            <div class="empty-state-icon">🛣️</div>
+            <div class="empty-state-text">No hay unidades en tránsito inmediato hacia destino.</div>
+          </td>
+        </tr>
+      `;
       return;
     }
 
     viajes.forEach(v => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${v.camion_patente}</strong></td>
+        <td><strong style="font-family: var(--font-mono);">${v.camion_patente}</strong></td>
         <td>${v.chofer_nombre}</td>
-        <td>${v.origen} ➔ ${v.destino}</td>
-        <td>${v.carga_descripcion} (${v.peso_kg.toLocaleString()} kg)</td>
+        <td class="truncate-cell" title="${v.origen} ➔ ${v.destino}">${v.origen} ➔ ${v.destino}</td>
+        <td class="truncate-cell" title="${v.carga_descripcion} (${v.peso_kg.toLocaleString()} kg)">${v.carga_descripcion} (${v.peso_kg.toLocaleString()} kg)</td>
         <td>
-          <button class="btn-finish" data-id="${v._id}" data-km="${v.km_salida}">
-            Registrar Llegada
-          </button>
+          <button class="btn-secondary btn-finalizar" style="padding: 4px 8px; font-size: 11px;">🏁 Asentar Llegada</button>
         </td>
       `;
-      const btn = tr.querySelector('.btn-finish');
-      btn.addEventListener('click', () => finalizarViaje(v._id, v.km_salida));
+
+      tr.querySelector('.btn-finalizar').addEventListener('click', () => finalizarViaje(v));
       tbody.appendChild(tr);
     });
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color: #f85149;">Error cargando viajes: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red-danger);">Error al cargar viajes: ${err.message}</td></tr>`;
   }
 }
 
-async function finalizarViaje(id, kmSalida) {
-  const km = prompt(`Ingrese odómetro de llegada (Salida registrada: ${kmSalida} km):`, kmSalida + 350);
-  if (!km) return;
+async function finalizarViaje(viaje) {
+  const kmEstimado = (viaje.km_salida || 0) + 100;
+  const kmLlegada = prompt(`Asentar kilometraje final para viaje de ${viaje.camion_patente} (Km salida: ${viaje.km_salida || 0}):`, kmEstimado);
+  if (kmLlegada === null) return;
+
+  const obs = prompt('Observaciones de recepción (opcional):', 'Entrega en conformidad.');
 
   try {
-    await api.finalizarViaje(id, {
-      km_llegada: Number(km),
-      observaciones: 'Llegada a destino conforme'
+    await api.finalizarViaje(viaje._id, {
+      km_llegada: Number(kmLlegada),
+      observaciones: obs ? obs.trim() : ''
     });
     await renderViajes();
     await renderKPIs();
