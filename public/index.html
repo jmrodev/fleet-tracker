@@ -381,6 +381,26 @@
     </div>
   </div>
 
+  <!-- 5. Modal Historial de Mantenimientos Embebidos -->
+  <div id="modal-historial-mant" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-historial-titulo" style="margin: 0;">🔧 Historial de Mantenimientos</h3>
+          <p id="modal-historial-subtitulo" style="color: var(--text-muted); font-size: 12px; margin: 4px 0 0 0;"></p>
+        </div>
+        <button class="modal-close" data-close="modal-historial-mant">&times;</button>
+      </div>
+      <div id="modal-historial-content" style="max-height: 60vh; overflow-y: auto;">
+        <!-- Se inyecta dinámicamente -->
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+        <button id="btn-modal-historial-nuevo" class="btn-secondary" style="font-size: 12px;">+ Asentar Mantenimiento</button>
+        <button type="button" class="btn-secondary" data-close="modal-historial-mant">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Orquestador Principal ES Modules -->
   <script type="module" src="js/app.js"></script>
 </body>
