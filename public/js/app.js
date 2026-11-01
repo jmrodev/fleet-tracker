@@ -1,7 +1,8 @@
-// public/js/app.js - Orquestador y Navegación entre Vistas
+// public/js/app.js - Orquestador y Navegación entre Vistas Separadas
 import { renderKPIs } from './views/kpis.js';
 import { initViajesView, renderViajes } from './views/viajes.js';
-import { initFlotaView, renderFlota } from './views/flota.js';
+import { initCamionesView, renderCamiones } from './views/camiones.js';
+import { initChoferesView, renderChoferes } from './views/choferes.js';
 import { renderStats } from './views/stats.js';
 
 function setupTabNavigation() {
@@ -21,7 +22,8 @@ function setupTabNavigation() {
 
       // Cargar o refrescar vista específica
       if (targetView === 'viajes') renderViajes();
-      if (targetView === 'flota') renderFlota();
+      if (targetView === 'camiones') renderCamiones();
+      if (targetView === 'choferes') renderChoferes();
       if (targetView === 'stats') renderStats();
     });
   });
@@ -30,10 +32,11 @@ function setupTabNavigation() {
 document.addEventListener('DOMContentLoaded', async () => {
   setupTabNavigation();
 
-  // Inicializar componentes
+  // Inicializar componentes modulares
   await renderKPIs();
   await initViajesView();
-  await initFlotaView();
+  await initCamionesView();
+  await initChoferesView();
   await renderStats();
 
   const btnRefresh = document.getElementById('btn-refresh');
@@ -41,7 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnRefresh.addEventListener('click', async () => {
       await renderKPIs();
       await renderViajes();
-      await renderFlota();
+      await renderCamiones();
+      await renderChoferes();
       await renderStats();
     });
   }

@@ -1,12 +1,11 @@
-// public/js/views/flota.js - Vista de Unidades, Choferes y Mantenimiento con CRUD Completo
+// public/js/views/camiones.js - Vista dedicada e independiente de Camiones & Mantenimiento
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 
-export async function initFlotaView() {
+export async function initCamionesView() {
   bindFormNuevoCamion();
-  bindFormNuevoChofer();
   bindFormMantenimiento();
-  await renderFlota();
+  await renderCamiones();
 }
 
 function bindFormNuevoCamion() {
@@ -33,43 +32,8 @@ function bindFormNuevoCamion() {
         await api.crearCamion(payload);
         e.target.reset();
         msg.className = 'success-box';
-        msg.textContent = '✓ Camión registrado con éxito (Índice único verificado).';
-        await renderFlota();
-        await renderKPIs();
-      } catch (err) {
-        msg.textContent = err.message;
-      }
-    });
-  }
-}
-
-function bindFormNuevoChofer() {
-  const form = document.getElementById('form-chofer');
-  if (form && !form.dataset.bound) {
-    form.dataset.bound = 'true';
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('msg-chofer');
-      msg.textContent = '';
-      msg.className = 'error-box';
-
-      try {
-        const payload = {
-          dni: document.getElementById('chofer-dni').value,
-          nombre: document.getElementById('chofer-nombre').value,
-          telefono: document.getElementById('chofer-tel').value,
-          licencia: {
-            categoria: document.getElementById('chofer-lic-cat').value,
-            vencimiento: document.getElementById('chofer-lic-venc').value
-          },
-          foto_url: document.getElementById('chofer-foto').value
-        };
-
-        await api.crearChofer(payload);
-        e.target.reset();
-        msg.className = 'success-box';
-        msg.textContent = '✓ Chofer dado de alta con éxito (Índice único verificado).';
-        await renderFlota();
+        msg.textContent = '✓ Camión registrado con éxito (Índice único verificado en motor).';
+        await renderCamiones();
         await renderKPIs();
       } catch (err) {
         msg.textContent = err.message;
@@ -100,8 +64,8 @@ function bindFormMantenimiento() {
         await api.registrarMantenimiento(patente, payload);
         e.target.reset();
         msg.className = 'success-box';
-        msg.textContent = '✓ Mantenimiento asentado exitosamente en hoja de vida ($push).';
-        await renderFlota();
+        msg.textContent = '✓ Mantenimiento asentado exitosamente en hoja de vida ($push atómico).';
+        await renderCamiones();
         await renderKPIs();
       } catch (err) {
         msg.textContent = err.message;
@@ -110,14 +74,9 @@ function bindFormMantenimiento() {
   }
 }
 
-export async function renderFlota() {
-  const [camiones, choferes] = await Promise.all([
-    api.getCamiones(),
-    api.getChoferes()
-  ]);
-
+export async function renderCamiones() {
+  const camiones = await api.getCamiones();
   renderTablaCamiones(camiones);
-  renderTablaChoferes(choferes);
   actualizarSelectorMantenimiento(camiones);
 }
 
@@ -150,8 +109,8 @@ function renderTablaCamiones(camiones) {
       <td><span class="badge-${c.estado}">${c.estado}</span></td>
       <td>${mantHtml}</td>
       <td style="white-space: nowrap;">
-        <button class="btn-secondary btn-edit-camion" style="padding: 4px 8px; font-size: 11px;">✏️</button>
-        <button class="btn-danger btn-del-camion" style="padding: 4px 8px; font-size: 11px; background:#da3633; color:#fff;">🗑️</button>
+        <button class="btn-secondary btn-edit-camion" style="padding: 4px 8px; font-size: 11px;">✏️ Editar</button>
+        <button class="btn-danger btn-del-camion" style="padding: 4px 8px; font-size: 11px; background:#da3633; color:#fff;">🗑️ Eliminar</button>
       </td>
     `;
 
@@ -173,7 +132,7 @@ async function editarCamion(c) {
       kilometraje_actual: Number(nuevoKm),
       estado: nuevoEstado.trim()
     });
-    await renderFlota();
+    await renderCamiones();
     await renderKPIs();
   } catch (err) {
     alert(err.message);
@@ -184,72 +143,7 @@ async function borrarCamion(patente) {
   if (!confirm(`¿Está seguro de eliminar el camión con patente ${patente}?`)) return;
   try {
     await api.eliminarCamion(patente);
-    await renderFlota();
-    await renderKPIs();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-function renderTablaChoferes(choferes) {
-  const tbody = document.getElementById('choferes-body');
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-  if (!choferes.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay choferes registrados</td></tr>';
-    return;
-  }
-
-  choferes.forEach(ch => {
-    const fotoImg = ch.foto_url 
-      ? `<img src="${ch.foto_url}" class="driver-thumb" alt="${ch.nombre}">`
-      : `<div class="driver-thumb" style="background:#21262d; display:flex; align-items:center; justify-content:center; font-size:1rem;">👤</div>`;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td style="width: 50px;">${fotoImg}</td>
-      <td><strong>${ch.dni}</strong></td>
-      <td>${ch.nombre}</td>
-      <td>${ch.telefono}</td>
-      <td>Licencia: ${ch.licencia.categoria} (Vence: ${ch.licencia.vencimiento})</td>
-      <td><span class="badge-${ch.estado}">${ch.estado}</span></td>
-      <td style="white-space: nowrap;">
-        <button class="btn-secondary btn-edit-chofer" style="padding: 4px 8px; font-size: 11px;">✏️</button>
-        <button class="btn-danger btn-del-chofer" style="padding: 4px 8px; font-size: 11px; background:#da3633; color:#fff;">🗑️</button>
-      </td>
-    `;
-
-    tr.querySelector('.btn-edit-chofer').addEventListener('click', () => editarChofer(ch));
-    tr.querySelector('.btn-del-chofer').addEventListener('click', () => borrarChofer(ch.dni));
-    tbody.appendChild(tr);
-  });
-}
-
-async function editarChofer(ch) {
-  const nuevoTel = prompt(`Actualizar teléfono para ${ch.nombre}:`, ch.telefono);
-  if (nuevoTel === null) return;
-
-  const nuevoEstado = prompt(`Actualizar estado (disponible / asignado / descanso):`, ch.estado);
-  if (nuevoEstado === null) return;
-
-  try {
-    await api.actualizarChofer(ch.dni, {
-      telefono: nuevoTel.trim(),
-      estado: nuevoEstado.trim()
-    });
-    await renderFlota();
-    await renderKPIs();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-async function borrarChofer(dni) {
-  if (!confirm(`¿Está seguro de dar de baja al chofer con DNI ${dni}?`)) return;
-  try {
-    await api.eliminarChofer(dni);
-    await renderFlota();
+    await renderCamiones();
     await renderKPIs();
   } catch (err) {
     alert(err.message);
