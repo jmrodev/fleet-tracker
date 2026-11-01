@@ -1,9 +1,26 @@
-// public/js/app.js - Orquestador y Gestión de Vistas y Modales
+// public/js/app.js - Orquestador y Gestión de Vistas, Modales y Toasts
 import { renderKPIs } from './views/kpis.js';
 import { initViajesView, renderViajes } from './views/viajes.js';
 import { initCamionesView, renderCamiones } from './views/camiones.js';
 import { initChoferesView, renderChoferes } from './views/choferes.js';
 import { renderStats } from './views/stats.js';
+
+export function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.25s ease';
+    setTimeout(() => toast.remove(), 250);
+  }, 3200);
+}
 
 export function openModal(modalId) {
   const modal = document.getElementById(modalId);

@@ -2,6 +2,7 @@
 :root {
   --surface-canvas: #0b0e14;
   --surface-panel: #111620;
+  --surface-subtle: #161d2b;
   --surface-row-hover: #161d2b;
   --border-subtle: #1e2638;
   --border-focus: #388bfd;
@@ -76,11 +77,11 @@ header.app-header {
 }
 
 .brand-title h1 {
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: 1.35rem; /* ~21.6px, salto > 1.35x sobre h2 (16px) */
+  font-weight: 700;
   margin: 0;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .brand-title span.sub {
@@ -515,7 +516,126 @@ button[type="submit"]:hover:not(:disabled) {
   color: var(--text-primary);
 }
 
-/* Badge de Historial de Mantenimientos y Timeline en Modal */
+/* Toast Notifications (Harden / a11y) */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.toast {
+  background-color: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto;
+}
+
+.toast.toast-success {
+  border-color: rgba(35, 134, 54, 0.4);
+}
+
+.toast.toast-error {
+  border-color: rgba(218, 54, 51, 0.4);
+  color: #ff7b72;
+}
+
+@keyframes toastFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Skeleton Loaders (Operate Mode / No CLS) */
+.skeleton-line {
+  height: 14px;
+  background-color: var(--surface-subtle);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  animation: skeletonPulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-box {
+  background-color: var(--surface-subtle);
+  border-radius: 4px;
+  animation: skeletonPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes skeletonPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}
+
+/* Toolbar de Filtros y Búsqueda */
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+
+.search-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 4px 10px;
+  width: 280px;
+}
+
+.search-input-group input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  width: 100%;
+  padding: 2px 0;
+  margin: 0;
+}
+
+.search-input-group input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.filter-select {
+  background-color: var(--surface-canvas);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  width: auto;
+  margin: 0;
+}
+
+/* Botones con Iconos */
+.btn-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-with-icon svg {
+  flex-shrink: 0;
+}
 .badge-mant-summary {
   display: inline-flex;
   align-items: center;
