@@ -4,13 +4,21 @@ const { getDB } = require('../config/db');
 
 const router = express.Router();
 
-// Listar viajes (con paginación defensiva para proteger memoria)
+const ESTADOS_VIAJE_VALIDOS = ['en_curso', 'finalizado', 'cancelado'];
+
+// Listar viajes (con paginación defensiva y sanitización de filtros)
 router.get('/', async (req, res) => {
   try {
     const db = getDB();
     const filter = {};
-    if (req.query.estado) {
-      filter.estado = req.query.estado;
+    if (req.query.estado !== undefined) {
+      const estadoSanitizado = String(req.query.estado).trim();
+      if (!ESTADOS_VIAJE_VALIDOS.includes(estadoSanitizado)) {
+        return res.status(400).json({ 
+          error: `Filtro de estado inválido '${estadoSanitizado}'. Permitidos: ${ESTADOS_VIAJE_VALIDOS.join(', ')}` 
+        });
+      }
+      filter.estado = estadoSanitizado;
     }
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
     const skip = Math.max(Number(req.query.skip) || 0, 0);
@@ -27,7 +35,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Despachar nuevo viaje (Reserva atómica en MongoDB para evitar condiciones de carrera)
+// Despachar nuevo viaje (Reserva atómica en MongoDB con chequeo de capacidad en motor)
 router.post('/', async (req, res) => {
   const db = getDB();
   const { camion_patente, chofer_dni, origen, destino, carga_descripcion, peso_kg, km_salida } = req.body;
@@ -38,23 +46,32 @@ router.post('/', async (req, res) => {
   const patenteUpper = camion_patente.toUpperCase();
   const dniStr = String(chofer_dni).trim();
   const pesoNum = Number(peso_kg);
-
-  // 1. Verificación previa de capacidad y existencia de chofer
-  const camion = await db.collection('camiones').findOne({ patente: patenteUpper });
-  if (!camion) return res.status(404).json({ error: `Camión con patente '${patenteUpper}' no encontrado` });
-  if (pesoNum > camion.capacidad_kg) {
-    return res.status(400).json({ error: `Sobrecarga: El peso (${pesoNum} kg) supera la capacidad máxima (${camion.capacidad_kg} kg)` });
+  if (isNaN(pesoNum) || pesoNum <= 0) {
+    return res.status(400).json({ error: 'peso_kg debe ser un número positivo' });
   }
 
-  // 2. Reserva atómica del camión (Compare-and-Swap atómico a nivel motor)
+  // 1. Verificación de existencia base del camión para dar mensaje descriptivo si no existe
+  const camionExiste = await db.collection('camiones').findOne({ patente: patenteUpper });
+  if (!camionExiste) {
+    return res.status(404).json({ error: `Camión con patente '${patenteUpper}' no encontrado` });
+  }
+  if (pesoNum > camionExiste.capacidad_kg) {
+    return res.status(400).json({ 
+      error: `Sobrecarga: El peso (${pesoNum} kg) supera la capacidad máxima (${camionExiste.capacidad_kg} kg)` 
+    });
+  }
+
+  // 2. Reserva atómica del camión incluyendo invariante de capacidad directamente en el filtro CAS
   const camionReservado = await db.collection('camiones').findOneAndUpdate(
-    { patente: patenteUpper, estado: 'disponible' },
+    { patente: patenteUpper, estado: 'disponible', capacidad_kg: { $gte: pesoNum } },
     { $set: { estado: 'en_viaje' } },
     { returnDocument: 'after' }
   );
 
   if (!camionReservado) {
-    return res.status(409).json({ error: `El camión ${patenteUpper} no está disponible o ya fue asignado en concurrencia` });
+    return res.status(409).json({ 
+      error: `El camión ${patenteUpper} no está disponible, no soporta la carga requerida o fue asignado en concurrencia` 
+    });
   }
 
   // 3. Reserva atómica del chofer (Compare-and-Swap atómico a nivel motor)
