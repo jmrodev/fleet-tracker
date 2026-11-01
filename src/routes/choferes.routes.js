@@ -3,13 +3,22 @@ const { getDB } = require('../config/db');
 
 const router = express.Router();
 
-// 1. Listar choferes (con filtro opcional de estado y paginación defensiva)
+// Estados de nómina válidos (Strict State Machine Invariant)
+const ESTADOS_CHOFER_VALIDOS = ['disponible', 'asignado', 'descanso'];
+
+// 1. Listar choferes (con filtro sanitizado de estado y paginación defensiva)
 router.get('/', async (req, res) => {
   try {
     const db = getDB();
     const filter = {};
-    if (req.query.estado) {
-      filter.estado = req.query.estado;
+    if (req.query.estado !== undefined) {
+      const estadoSanitizado = String(req.query.estado).trim();
+      if (!ESTADOS_CHOFER_VALIDOS.includes(estadoSanitizado)) {
+        return res.status(400).json({ 
+          error: `Filtro de estado inválido '${estadoSanitizado}'. Permitidos: ${ESTADOS_CHOFER_VALIDOS.join(', ')}` 
+        });
+      }
+      filter.estado = estadoSanitizado;
     }
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
     const skip = Math.max(Number(req.query.skip) || 0, 0);
@@ -72,9 +81,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Estados de nómina válidos (Strict State Machine Invariant)
-const ESTADOS_CHOFER_VALIDOS = ['disponible', 'asignado', 'descanso'];
 
 // 4. Actualizar chofer (Update)
 router.put('/:dni', async (req, res) => {

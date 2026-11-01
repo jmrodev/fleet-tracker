@@ -4,13 +4,22 @@ const { getDB } = require('../config/db');
 
 const router = express.Router();
 
-// 1. Listar camiones (con filtro opcional de estado y paginación defensiva)
+// Estados operacionales válidos (Strict State Machine Invariant)
+const ESTADOS_CAMION_VALIDOS = ['disponible', 'en_mantenimiento', 'en_viaje'];
+
+// 1. Listar camiones (con filtro sanitizado de estado y paginación defensiva)
 router.get('/', async (req, res) => {
   try {
     const db = getDB();
     const filter = {};
-    if (req.query.estado) {
-      filter.estado = req.query.estado;
+    if (req.query.estado !== undefined) {
+      const estadoSanitizado = String(req.query.estado).trim();
+      if (!ESTADOS_CAMION_VALIDOS.includes(estadoSanitizado)) {
+        return res.status(400).json({ 
+          error: `Filtro de estado inválido '${estadoSanitizado}'. Permitidos: ${ESTADOS_CAMION_VALIDOS.join(', ')}` 
+        });
+      }
+      filter.estado = estadoSanitizado;
     }
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
     const skip = Math.max(Number(req.query.skip) || 0, 0);
@@ -73,9 +82,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Estados operacionales válidos (Strict State Machine Invariant)
-const ESTADOS_CAMION_VALIDOS = ['disponible', 'en_mantenimiento', 'en_viaje'];
 
 // 4. Actualizar camión (Update)
 router.put('/:patente', async (req, res) => {
