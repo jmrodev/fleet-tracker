@@ -21,8 +21,23 @@ router.get('/', async (req, res) => {
       }
       filter.estado = estadoSanitizado;
     }
-    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
-    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    let limit = 50;
+    if (req.query.limit !== undefined) {
+      const parsedLimit = Number(req.query.limit);
+      if (isNaN(parsedLimit) || parsedLimit < 1) {
+        return res.status(400).json({ error: "El parámetro 'limit' debe ser un número entero positivo" });
+      }
+      limit = Math.min(parsedLimit, 100);
+    }
+
+    let skip = 0;
+    if (req.query.skip !== undefined) {
+      const parsedSkip = Number(req.query.skip);
+      if (isNaN(parsedSkip) || parsedSkip < 0) {
+        return res.status(400).json({ error: "El parámetro 'skip' debe ser un número mayor o igual a 0" });
+      }
+      skip = parsedSkip;
+    }
 
     const camiones = await db.collection('camiones')
       .find(filter)
@@ -56,8 +71,13 @@ router.post('/', async (req, res) => {
   try {
     const db = getDB();
     const { patente, marca, modelo, anio, capacidad_kg, kilometraje_actual, foto_url } = req.body;
-    if (!patente || !marca || !modelo || !anio || !capacidad_kg) {
-      return res.status(400).json({ error: 'patente, marca, modelo, año y capacidad_kg son obligatorios' });
+    if (!patente || !marca || !modelo || !anio || !capacidad_kg || kilometraje_actual === undefined) {
+      return res.status(400).json({ error: 'patente, marca, modelo, anio, capacidad_kg y kilometraje_actual son obligatorios' });
+    }
+
+    const kmParsed = Number(kilometraje_actual);
+    if (isNaN(kmParsed) || kmParsed < 0) {
+      return res.status(400).json({ error: 'kilometraje_actual debe ser un número mayor o igual a 0' });
     }
 
     const doc = {
@@ -66,8 +86,8 @@ router.post('/', async (req, res) => {
       modelo: String(modelo).trim(),
       anio: Number(anio),
       capacidad_kg: Number(capacidad_kg),
-      kilometraje_actual: Number(kilometraje_actual || 0),
-      foto_url: String(foto_url || '').trim(),
+      kilometraje_actual: kmParsed,
+      foto_url: foto_url !== undefined && foto_url !== null ? String(foto_url).trim() : '',
       estado: 'disponible',
       mantenimientos: [],
       creado_en: new Date()
@@ -162,17 +182,27 @@ router.post('/:patente/mantenimientos', async (req, res) => {
     const patente = req.params.patente.toUpperCase();
     const { tipo, taller, costo, km_servicio, detalles, cambiar_estado } = req.body;
 
-    if (!tipo || costo === undefined || !km_servicio) {
-      return res.status(400).json({ error: 'tipo, costo y km_servicio son obligatorios' });
+    if (!tipo || !taller || costo === undefined || km_servicio === undefined) {
+      return res.status(400).json({ error: 'tipo, taller, costo y km_servicio son obligatorios' });
+    }
+
+    const costoParsed = Number(costo);
+    if (isNaN(costoParsed) || costoParsed < 0) {
+      return res.status(400).json({ error: 'costo debe ser un número mayor o igual a 0' });
+    }
+
+    const kmServParsed = Number(km_servicio);
+    if (isNaN(kmServParsed) || kmServParsed < 0) {
+      return res.status(400).json({ error: 'km_servicio debe ser un número mayor o igual a 0' });
     }
 
     const registro = {
       id: new ObjectId().toString(),
       tipo: String(tipo).trim(),
-      taller: String(taller || 'Taller Interno').trim(),
-      costo: Number(costo),
-      km_servicio: Number(km_servicio),
-      detalles: String(detalles || ''),
+      taller: String(taller).trim(),
+      costo: costoParsed,
+      km_servicio: kmServParsed,
+      detalles: detalles !== undefined && detalles !== null ? String(detalles).trim() : '',
       fecha: new Date()
     };
 

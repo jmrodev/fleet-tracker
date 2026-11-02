@@ -177,9 +177,10 @@ function abrirModalFinalizarViaje(v) {
   const title = document.getElementById('modal-fin-viaje-title');
   const msg = document.getElementById('msg-fin-viaje');
 
+  const salida = typeof v.km_salida === 'number' ? v.km_salida : 0;
   if (idInput) idInput.value = v._id;
-  if (kmInput) kmInput.value = (v.km_salida || 0) + 100;
-  if (title) title.textContent = `Asentar Llegada: ${v.camion_patente} (Salida: ${v.km_salida || 0} km)`;
+  if (kmInput) kmInput.value = salida + 100;
+  if (title) title.textContent = `Asentar Llegada: ${v.camion_patente} (Salida: ${salida} km)`;
   if (msg) {
     msg.textContent = '';
     msg.className = 'error-box';

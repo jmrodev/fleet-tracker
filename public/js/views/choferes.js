@@ -29,15 +29,17 @@ function bindFiltrosChoferes() {
 }
 
 function aplicarFiltros() {
-  const search = (document.getElementById('filtro-choferes')?.value || '').toLowerCase().trim();
-  const estado = (document.getElementById('filtro-estado-choferes')?.value || '').trim();
+  const searchEl = document.getElementById('filtro-choferes');
+  const estadoEl = document.getElementById('filtro-estado-choferes');
+  const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+  const estado = estadoEl ? estadoEl.value.trim() : '';
 
   const filtrados = choferesCache.filter(ch => {
-    const matchSearch = !search || 
+    const matchSearch = search.length === 0 || 
       ch.dni.toLowerCase().includes(search) || 
       ch.nombre.toLowerCase().includes(search) || 
       ch.telefono.toLowerCase().includes(search);
-    const matchEstado = !estado || ch.estado === estado;
+    const matchEstado = estado.length === 0 || ch.estado === estado;
     return matchSearch && matchEstado;
   });
 

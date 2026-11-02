@@ -30,15 +30,17 @@ function bindFiltrosCamiones() {
 }
 
 function aplicarFiltros() {
-  const search = (document.getElementById('filtro-camiones')?.value || '').toLowerCase().trim();
-  const estado = (document.getElementById('filtro-estado-camiones')?.value || '').trim();
+  const searchEl = document.getElementById('filtro-camiones');
+  const estadoEl = document.getElementById('filtro-estado-camiones');
+  const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+  const estado = estadoEl ? estadoEl.value.trim() : '';
 
   const filtrados = flotaCache.filter(c => {
-    const matchSearch = !search || 
+    const matchSearch = search.length === 0 || 
       c.patente.toLowerCase().includes(search) || 
       c.marca.toLowerCase().includes(search) || 
       c.modelo.toLowerCase().includes(search);
-    const matchEstado = !estado || c.estado === estado;
+    const matchEstado = estado.length === 0 || c.estado === estado;
     return matchSearch && matchEstado;
   });
 
@@ -68,7 +70,7 @@ function bindFormNuevoCamion() {
           modelo: document.getElementById('camion-modelo').value.trim(),
           anio: Number(document.getElementById('camion-anio').value),
           capacidad_kg: Number(document.getElementById('camion-capacidad').value),
-          kilometraje_actual: Number(document.getElementById('camion-km').value || 0),
+          kilometraje_actual: Number(document.getElementById('camion-km').value),
           foto_url: document.getElementById('camion-foto').value.trim()
         };
 
@@ -212,9 +214,9 @@ function renderTablaCamiones(camiones) {
   }
 
   camiones.forEach(c => {
-    const mantenimientos = c.mantenimientos || [];
+    const mantenimientos = Array.isArray(c.mantenimientos) ? c.mantenimientos : [];
     const count = mantenimientos.length;
-    const totalCosto = mantenimientos.reduce((acc, m) => acc + (m.costo || 0), 0);
+    const totalCosto = mantenimientos.reduce((acc, m) => acc + (typeof m.costo === 'number' ? m.costo : 0), 0);
 
     let mantCellHtml = '';
     if (count === 0) {
@@ -277,7 +279,7 @@ function mostrarHistorialMantenimiento(camion) {
   if (titulo) titulo.textContent = `Hoja de Vida: ${camion.patente}`;
   if (subtitulo) subtitulo.textContent = `${camion.marca} ${camion.modelo} (${camion.anio}) — Odómetro actual: ${camion.kilometraje_actual.toLocaleString()} km`;
 
-  const mantenimientos = camion.mantenimientos || [];
+  const mantenimientos = Array.isArray(camion.mantenimientos) ? camion.mantenimientos : [];
   if (container) {
     if (mantenimientos.length === 0) {
       container.innerHTML = `
@@ -289,16 +291,20 @@ function mostrarHistorialMantenimiento(camion) {
     } else {
       const itemsHtml = mantenimientos.map((m) => {
         const fechaStr = m.fecha ? new Date(m.fecha).toLocaleDateString() : 'Fecha no especificada';
+        const tipoStr = m.tipo ? m.tipo : 'Intervención';
+        const tallerStr = m.taller ? m.taller : 'Taller no especificado';
+        const costoNum = typeof m.costo === 'number' ? m.costo : 0;
+        const kmNum = typeof m.km_servicio === 'number' ? m.km_servicio : 0;
         return `
           <div class="mant-item-card">
             <div class="mant-item-header">
-              <strong>${m.tipo || 'Mantenimiento General'}</strong>
-              <span class="mant-item-cost">$${(m.costo || 0).toLocaleString()}</span>
+              <strong>${tipoStr}</strong>
+              <span class="mant-item-cost">$${costoNum.toLocaleString()}</span>
             </div>
             <div class="mant-item-meta">
               <span>📅 ${fechaStr}</span>
-              <span>🛣️ ${(m.km_servicio || 0).toLocaleString()} km</span>
-              <span>🏢 ${m.taller || 'Taller Interno'}</span>
+              <span>🛣️ ${kmNum.toLocaleString()} km</span>
+              <span>🏢 ${tallerStr}</span>
             </div>
             ${m.detalles ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">📝 ${m.detalles}</div>` : ''}
           </div>

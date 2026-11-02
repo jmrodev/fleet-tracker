@@ -20,8 +20,23 @@ router.get('/', async (req, res) => {
       }
       filter.estado = estadoSanitizado;
     }
-    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
-    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    let limit = 50;
+    if (req.query.limit !== undefined) {
+      const parsedLimit = Number(req.query.limit);
+      if (isNaN(parsedLimit) || parsedLimit < 1) {
+        return res.status(400).json({ error: "El parámetro 'limit' debe ser un número entero positivo" });
+      }
+      limit = Math.min(parsedLimit, 100);
+    }
+
+    let skip = 0;
+    if (req.query.skip !== undefined) {
+      const parsedSkip = Number(req.query.skip);
+      if (isNaN(parsedSkip) || parsedSkip < 0) {
+        return res.status(400).json({ error: "El parámetro 'skip' debe ser un número mayor o igual a 0" });
+      }
+      skip = parsedSkip;
+    }
 
     const choferes = await db.collection('choferes')
       .find(filter)
@@ -55,8 +70,8 @@ router.post('/', async (req, res) => {
   try {
     const db = getDB();
     const { dni, nombre, telefono, licencia, foto_url } = req.body;
-    if (!dni || !nombre || !telefono || !licencia) {
-      return res.status(400).json({ error: 'DNI, nombre, teléfono y licencia son obligatorios' });
+    if (!dni || !nombre || !telefono || !licencia || !licencia.categoria || !licencia.vencimiento) {
+      return res.status(400).json({ error: 'DNI, nombre, teléfono, licencia.categoria y licencia.vencimiento son obligatorios' });
     }
 
     const doc = {
@@ -64,10 +79,10 @@ router.post('/', async (req, res) => {
       nombre: String(nombre).trim(),
       telefono: String(telefono).trim(),
       licencia: {
-        categoria: String(licencia.categoria || 'E1').trim(),
-        vencimiento: String(licencia.vencimiento || '').trim()
+        categoria: String(licencia.categoria).trim().toUpperCase(),
+        vencimiento: String(licencia.vencimiento).trim()
       },
-      foto_url: String(foto_url || '').trim(),
+      foto_url: foto_url !== undefined && foto_url !== null ? String(foto_url).trim() : '',
       estado: 'disponible',
       creado_en: new Date()
     };
