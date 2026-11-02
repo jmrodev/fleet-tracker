@@ -65,11 +65,16 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'peso_kg debe ser un número positivo' });
   }
 
-  // 1. Verificación de existencia base del camión para dar mensaje descriptivo si no existe
+  // 1. Verificación de existencia base del camión y del chofer para dar mensajes descriptivos
   const camionExiste = await db.collection('camiones').findOne({ patente: patenteUpper });
   if (!camionExiste) {
     return res.status(404).json({ error: `Camión con patente '${patenteUpper}' no encontrado` });
   }
+  const choferExiste = await db.collection('choferes').findOne({ dni: dniStr });
+  if (!choferExiste) {
+    return res.status(404).json({ error: `Chofer con DNI '${dniStr}' no encontrado` });
+  }
+
   if (pesoNum > camionExiste.capacidad_kg) {
     return res.status(400).json({ 
       error: `Sobrecarga: El peso (${pesoNum} kg) supera la capacidad máxima (${camionExiste.capacidad_kg} kg)` 

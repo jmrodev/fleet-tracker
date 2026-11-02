@@ -75,17 +75,39 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'patente, marca, modelo, anio, capacidad_kg y kilometraje_actual son obligatorios' });
     }
 
+    const patenteLimpia = String(patente).trim().toUpperCase();
+    if (patenteLimpia.length === 0) {
+      return res.status(400).json({ error: 'La patente no puede estar vacía' });
+    }
+
+    // Regla de formato: solo letras y números (alfanumérico sin espacios ni símbolos)
+    const patenteRegex = /^[A-Z0-9]+$/;
+    if (!patenteRegex.test(patenteLimpia)) {
+      return res.status(400).json({ error: 'Formato de patente inválido. Solo debe contener caracteres alfanuméricos.' });
+    }
+
+    const anioParsed = Number(anio);
+    const anioActual = new Date().getFullYear();
+    if (isNaN(anioParsed) || anioParsed < 1950 || anioParsed > anioActual + 1) {
+      return res.status(400).json({ error: `El anio del camión debe ser un número válido entre 1950 y ${anioActual + 1}` });
+    }
+
+    const capacidadParsed = Number(capacidad_kg);
+    if (isNaN(capacidadParsed) || capacidadParsed <= 0) {
+      return res.status(400).json({ error: 'capacidad_kg debe ser un número estrictamente mayor a 0' });
+    }
+
     const kmParsed = Number(kilometraje_actual);
     if (isNaN(kmParsed) || kmParsed < 0) {
       return res.status(400).json({ error: 'kilometraje_actual debe ser un número mayor o igual a 0' });
     }
 
     const doc = {
-      patente: String(patente).trim().toUpperCase(),
+      patente: patenteLimpia,
       marca: String(marca).trim(),
       modelo: String(modelo).trim(),
-      anio: Number(anio),
-      capacidad_kg: Number(capacidad_kg),
+      anio: anioParsed,
+      capacidad_kg: capacidadParsed,
       kilometraje_actual: kmParsed,
       foto_url: foto_url !== undefined && foto_url !== null ? String(foto_url).trim() : '',
       estado: 'disponible',
