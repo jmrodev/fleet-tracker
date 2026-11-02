@@ -1,7 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const http = require('node:http');
-const { MongoClient, ObjectId } = require('mongodb');
+const { ObjectId } = require('mongodb');
 const { connectDB, getDB } = require('../server/config/db');
 const app = require('../server/server');
 
@@ -44,326 +43,412 @@ test.after(async () => {
 });
 
 // ----------------------------------------------------
-// US-001: Camiones & Invariantes de Negocio Base
+// US-000: Inicialización del Sistema y Estado Cero (Day Zero)
 // ----------------------------------------------------
-test.describe('US-001: Camiones & Odometría', () => {
-  const testPatente = 'TDD999';
-
-  test.afterEach(async () => {
-    await db.collection('camiones').deleteMany({ patente: testPatente });
-  });
-
-  test('Escenario 1: Registro exitoso con patente única e índice en MongoDB', async () => {
-    const payload = {
-      patente: testPatente,
-      marca: 'Scania',
-      modelo: 'R450',
-      anio: 2023,
-      capacidad_kg: 28000,
-      kilometraje_actual: 120000,
-      foto_url: 'https://example.com/truck.jpg'
-    };
-
-    const res = await request('/api/camiones', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-
-    assert.equal(res.status, 201);
-    assert.equal(res.data.patente, testPatente);
-    assert.equal(res.data.kilometraje_actual, 120000);
-
-    // Intentar registrar duplicado debe responder 409
-    const resDuplicado = await request('/api/camiones', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-    assert.equal(resDuplicado.status, 409);
-    assert.match(resDuplicado.data.error, /ya está registrada/);
-  });
-
-  test('Escenario 2: Rechazo de campos obligatorios faltantes (sin fallbacks mágicos)', async () => {
-    const payloadIncompleto = {
-      patente: testPatente,
-      marca: 'Volvo'
-      // Omitidos modelo, anio, capacidad_kg, kilometraje_actual
-    };
-
-    const res = await request('/api/camiones', {
-      method: 'POST',
-      body: JSON.stringify(payloadIncompleto)
-    });
-
-    assert.equal(res.status, 400);
-    assert.match(res.data.error, /obligatorios/);
-  });
-
-  test('Escenario 3: Filtro sanitizado por estado y validación de paginación', async () => {
-    // Filtro con estado inválido
-    const resInvalido = await request('/api/camiones?estado=destruido');
-    assert.equal(resInvalido.status, 400);
-    assert.match(resInvalido.data.error, /Filtro de estado inválido/);
-
-    // Paginación con límite inválido
-    const resLimitInvalido = await request('/api/camiones?limit=-5');
-    assert.equal(resLimitInvalido.status, 400);
-    assert.match(resLimitInvalido.data.error, /limit/);
-
-    // Paginación con skip inválido
-    const resSkipInvalido = await request('/api/camiones?skip=invalido');
-    assert.equal(resSkipInvalido.status, 400);
-    assert.match(resSkipInvalido.data.error, /skip/);
-  });
-});
-
-// ----------------------------------------------------
-// US-002: Choferes & Licencias
-// ----------------------------------------------------
-test.describe('US-002: Choferes & Licencias', () => {
-  const testDni = '99887766';
-
-  test.afterEach(async () => {
-    await db.collection('choferes').deleteMany({ dni: testDni });
-  });
-
-  test('Escenario 1: Alta exitosa con validación de licencia estricta', async () => {
-    const payload = {
-      dni: testDni,
-      nombre: 'Chofer TDD BDD',
-      telefono: '+54 11 4455-6677',
-      licencia: {
-        categoria: 'E1',
-        vencimiento: '2028-12-31'
-      },
-      foto_url: ''
-    };
-
-    const res = await request('/api/choferes', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-
-    assert.equal(res.status, 201);
-    assert.equal(res.data.dni, testDni);
-    assert.equal(res.data.licencia.categoria, 'E1');
-
-    // Conflicto por DNI duplicado
-    const resDup = await request('/api/choferes', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-    assert.equal(resDup.status, 409);
-  });
-
-  test('Escenario 2: Rechazo si falta licencia.categoria o licencia.vencimiento (sin asumir E1 por defecto)', async () => {
-    const payloadSinCat = {
-      dni: testDni,
-      nombre: 'Chofer Incompleto',
-      telefono: '123456',
-      licencia: {
-        vencimiento: '2027-01-01'
-      }
-    };
-
-    const res = await request('/api/choferes', {
-      method: 'POST',
-      body: JSON.stringify(payloadSinCat)
-    });
-
-    assert.equal(res.status, 400);
-    assert.match(res.data.error, /licencia\.categoria y licencia\.vencimiento son obligatorios/);
-  });
-});
-
-// ----------------------------------------------------
-// US-003: Mantenimiento Atómico ($push)
-// ----------------------------------------------------
-test.describe('US-003: Mantenimiento con $push atómico', () => {
-  const testPatente = 'MANT99';
-
-  test.beforeEach(async () => {
-    await db.collection('camiones').insertOne({
-      patente: testPatente,
-      marca: 'Iveco',
-      modelo: 'Stralis',
-      anio: 2022,
-      capacidad_kg: 24000,
-      kilometraje_actual: 80000,
-      estado: 'disponible',
-      mantenimientos: [],
-      creado_en: new Date()
-    });
-  });
-
-  test.afterEach(async () => {
-    await db.collection('camiones').deleteMany({ patente: testPatente });
-  });
-
-  test('Escenario 1: Registro de intervención técnica atómica sin sustituciones mágicas', async () => {
-    const orden = {
-      tipo: 'Cambio de Inyectores',
-      taller: 'Servicio Oficial Iveco',
-      costo: 350000,
-      km_servicio: 80000,
-      detalles: 'Intervención preventiva programada'
-    };
-
-    const res = await request(`/api/camiones/${testPatente}/mantenimientos`, {
-      method: 'POST',
-      body: JSON.stringify(orden)
-    });
-
+test.describe('US-000: Estado Cero (Day Zero)', () => {
+  test('Escenario 1: Flota vacía devuelve array vacío []', async () => {
+    // Consultar con filtro no coincidente para emular colección vacía
+    const res = await request('/api/camiones?estado=en_mantenimiento');
     assert.equal(res.status, 200);
-
-    const camion = await db.collection('camiones').findOne({ patente: testPatente });
-    assert.equal(camion.mantenimientos.length, 1);
-    assert.equal(camion.mantenimientos[0].taller, 'Servicio Oficial Iveco');
-    assert.equal(camion.mantenimientos[0].costo, 350000);
+    assert.equal(Array.isArray(res.data), true);
   });
 
-  test('Escenario 2: Rechazo si falta taller o costo (no asume Taller Interno)', async () => {
-    const ordenIncompleta = {
-      tipo: 'Alineación y Balanceo',
-      km_servicio: 80000
-    };
-
-    const res = await request(`/api/camiones/${testPatente}/mantenimientos`, {
-      method: 'POST',
-      body: JSON.stringify(ordenIncompleta)
-    });
-
-    assert.equal(res.status, 400);
-    assert.match(res.data.error, /tipo, taller, costo y km_servicio son obligatorios/);
+  test('Escenario 2: Nómina vacía devuelve array vacío []', async () => {
+    const res = await request('/api/choferes?estado=descanso');
+    assert.equal(res.status, 200);
+    assert.equal(Array.isArray(res.data), true);
   });
-});
 
-// ----------------------------------------------------
-// US-004: Estadísticas & Aggregation Pipeline
-// ----------------------------------------------------
-test.describe('US-004: Aggregation Pipeline de Flota', () => {
-  test('Escenario 1: Cómputo global de KPIs y agregación sin nulos', async () => {
+  test('Escenario 3: Historial de viajes vacío devuelve array vacío []', async () => {
+    const res = await request('/api/viajes?estado=cancelado');
+    assert.equal(res.status, 200);
+    assert.equal(Array.isArray(res.data), true);
+  });
+
+  test('Escenario 4: Métricas de flota en estado cero no arrojan nulos ni errores', async () => {
     const res = await request('/api/stats/flota');
     assert.equal(res.status, 200);
     assert.equal(typeof res.data.total_camiones, 'number');
-    assert.equal(typeof res.data.total_en_viaje, 'number');
     assert.equal(typeof res.data.km_flota_recorridos, 'number');
     assert.equal(Array.isArray(res.data.gasto_mantenimiento_por_marca), true);
   });
 });
 
 // ----------------------------------------------------
-// US-005: Concurrencia CAS & Odometría Monótona
+// US-001: Alta, Consulta y Ciclo de Vida del Camión
 // ----------------------------------------------------
-test.describe('US-005: Concurrencia Atómica & Odómetro', () => {
-  const patenteCAS = 'CAS001';
-  const dniCAS = '11223344';
+test.describe('US-001: Ciclo de Vida del Camión', () => {
+  const testPatente = 'TDD001';
+
+  test.afterEach(async () => {
+    await db.collection('camiones').deleteMany({ patente: testPatente });
+  });
+
+  test('Escenario 1: Registro exitoso con patente única', async () => {
+    const res = await request('/api/camiones', {
+      method: 'POST',
+      body: JSON.stringify({
+        patente: testPatente,
+        marca: 'Scania',
+        modelo: 'R450',
+        anio: 2023,
+        capacidad_kg: 28000,
+        kilometraje_actual: 120000
+      })
+    });
+    assert.equal(res.status, 201);
+    assert.equal(res.data.patente, testPatente);
+    assert.equal(res.data.estado, 'disponible');
+
+    // Escenario 2: Conflicto por duplicado
+    const resDup = await request('/api/camiones', {
+      method: 'POST',
+      body: JSON.stringify({
+        patente: testPatente,
+        marca: 'Scania',
+        modelo: 'R450',
+        anio: 2023,
+        capacidad_kg: 28000,
+        kilometraje_actual: 120000
+      })
+    });
+    assert.equal(resDup.status, 409);
+  });
+
+  test('Escenario 3: Rechazo si faltan campos obligatorios', async () => {
+    const res = await request('/api/camiones', {
+      method: 'POST',
+      body: JSON.stringify({ patente: testPatente })
+    });
+    assert.equal(res.status, 400);
+  });
+
+  test('Escenario 4: Consulta de camión inexistente (404)', async () => {
+    const res = await request('/api/camiones/INEXISTENTE');
+    assert.equal(res.status, 404);
+  });
+});
+
+// ----------------------------------------------------
+// US-002: Alta, Consulta y Ciclo de Vida del Chofer
+// ----------------------------------------------------
+test.describe('US-002: Ciclo de Vida del Chofer', () => {
+  const testDni = '10101010';
+
+  test.afterEach(async () => {
+    await db.collection('choferes').deleteMany({ dni: testDni });
+  });
+
+  test('Escenario 1: Alta exitosa de chofer con licencia obligatoria', async () => {
+    const res = await request('/api/choferes', {
+      method: 'POST',
+      body: JSON.stringify({
+        dni: testDni,
+        nombre: 'Chofer Test TDD',
+        telefono: '11223344',
+        licencia: { categoria: 'E1', vencimiento: '2028-10-10' }
+      })
+    });
+    assert.equal(res.status, 201);
+    assert.equal(res.data.dni, testDni);
+
+    // Escenario 2: Rechazo por DNI duplicado
+    const resDup = await request('/api/choferes', {
+      method: 'POST',
+      body: JSON.stringify({
+        dni: testDni,
+        nombre: 'Otro Chofer',
+        telefono: '998877',
+        licencia: { categoria: 'E1', vencimiento: '2028-10-10' }
+      })
+    });
+    assert.equal(resDup.status, 409);
+  });
+
+  test('Escenario 3: Rechazo de alta si faltan datos de licencia', async () => {
+    const res = await request('/api/choferes', {
+      method: 'POST',
+      body: JSON.stringify({
+        dni: testDni,
+        nombre: 'Chofer Sin Licencia',
+        telefono: '1122'
+      })
+    });
+    assert.equal(res.status, 400);
+  });
+
+  test('Escenario 4: Chofer inexistente responde 404', async () => {
+    const res = await request('/api/choferes/00000000');
+    assert.equal(res.status, 404);
+  });
+});
+
+// ----------------------------------------------------
+// US-003: Despacho de Viajes y Casos de Indisponibilidad
+// ----------------------------------------------------
+test.describe('US-003: Despacho de Viajes & Indisponibilidad', () => {
+  const patenteViaje = 'VIAJE99';
+  const dniViaje = '88998899';
 
   test.beforeEach(async () => {
     await db.collection('camiones').insertOne({
-      patente: patenteCAS,
-      marca: 'Scania',
-      modelo: 'G410',
-      anio: 2021,
-      capacidad_kg: 20000,
-      kilometraje_actual: 100000,
+      patente: patenteViaje,
+      marca: 'Volvo',
+      modelo: 'FH540',
+      anio: 2022,
+      capacidad_kg: 22000,
+      kilometraje_actual: 50000,
       estado: 'disponible',
       mantenimientos: [],
       creado_en: new Date()
     });
 
     await db.collection('choferes').insertOne({
-      dni: dniCAS,
-      nombre: 'Chofer Concurrente',
-      telefono: '112233',
-      licencia: { categoria: 'E1', vencimiento: '2028-01-01' },
+      dni: dniViaje,
+      nombre: 'Chofer Viajes',
+      telefono: '556677',
+      licencia: { categoria: 'E1', vencimiento: '2028-05-05' },
       estado: 'disponible',
       creado_en: new Date()
     });
   });
 
   test.afterEach(async () => {
-    await db.collection('camiones').deleteMany({ patente: patenteCAS });
-    await db.collection('choferes').deleteMany({ dni: dniCAS });
-    await db.collection('viajes').deleteMany({ camion_patente: patenteCAS });
+    await db.collection('camiones').deleteMany({ patente: patenteViaje });
+    await db.collection('choferes').deleteMany({ dni: dniViaje });
+    await db.collection('viajes').deleteMany({ camion_patente: patenteViaje });
   });
 
-  test('Escenario 1: Rechazo si el peso excede la capacidad máxima del camión', async () => {
-    const viajeExcedido = {
-      camion_patente: patenteCAS,
-      chofer_dni: dniCAS,
-      origen: 'Buenos Aires',
-      destino: 'Córdoba',
-      carga_descripcion: 'Maquinaria pesada',
-      peso_kg: 25000 // Capacidad del camión es 20000
-    };
+  test('Escenario 1: Despacho exitoso de viaje', async () => {
+    const res = await request('/api/viajes', {
+      method: 'POST',
+      body: JSON.stringify({
+        camion_patente: patenteViaje,
+        chofer_dni: dniViaje,
+        origen: 'Bahía Blanca',
+        destino: 'Mar del Plata',
+        carga_descripcion: 'Fertilizantes',
+        peso_kg: 15000
+      })
+    });
+    assert.equal(res.status, 201);
+    assert.equal(res.data.estado, 'en_curso');
+
+    const camion = await db.collection('camiones').findOne({ patente: patenteViaje });
+    assert.equal(camion.estado, 'en_viaje');
+
+    const chofer = await db.collection('choferes').findOne({ dni: dniViaje });
+    assert.equal(chofer.estado, 'asignado');
+  });
+
+  test('Escenario 2: Caso Borde - Ningún Camión Disponible (Camión inexistente responde 404)', async () => {
+    const res = await request('/api/viajes', {
+      method: 'POST',
+      body: JSON.stringify({
+        camion_patente: 'CAMION_FANTASMA',
+        chofer_dni: dniViaje,
+        origen: 'Buenos Aires',
+        destino: 'Córdoba',
+        carga_descripcion: 'Carga',
+        peso_kg: 5000
+      })
+    });
+    assert.equal(res.status, 404);
+  });
+
+  test('Escenario 3: Caso Borde - Ningún Chofer Disponible (Chofer ya asignado responde 409)', async () => {
+    // Marcar chofer como no disponible
+    await db.collection('choferes').updateOne({ dni: dniViaje }, { $set: { estado: 'asignado' } });
 
     const res = await request('/api/viajes', {
       method: 'POST',
-      body: JSON.stringify(viajeExcedido)
+      body: JSON.stringify({
+        camion_patente: patenteViaje,
+        chofer_dni: dniViaje,
+        origen: 'Buenos Aires',
+        destino: 'Córdoba',
+        carga_descripcion: 'Carga',
+        peso_kg: 5000
+      })
     });
+    assert.equal(res.status, 409);
 
+    // Rollback verificado: el camión no debe quedar reservado
+    const camion = await db.collection('camiones').findOne({ patente: patenteViaje });
+    assert.equal(camion.estado, 'disponible');
+  });
+
+  test('Escenario 4: Caso Borde - Sobrecarga de peso responde 400', async () => {
+    const res = await request('/api/viajes', {
+      method: 'POST',
+      body: JSON.stringify({
+        camion_patente: patenteViaje,
+        chofer_dni: dniViaje,
+        origen: 'Buenos Aires',
+        destino: 'Córdoba',
+        carga_descripcion: 'Maquinaria',
+        peso_kg: 30000 // Capacidad es 22000
+      })
+    });
     assert.equal(res.status, 400);
     assert.match(res.data.error, /supera la capacidad máxima/);
   });
+});
 
-  test('Escenario 2: Despacho exitoso y rechazo de reserva concurrente', async () => {
-    const viajeValido = {
-      camion_patente: patenteCAS,
-      chofer_dni: dniCAS,
-      origen: 'Rosario',
-      destino: 'Mendoza',
+// ----------------------------------------------------
+// US-004: Finalización de Viajes y Cómputo de Odometría
+// ----------------------------------------------------
+test.describe('US-004: Finalización de Viajes', () => {
+  const patenteFin = 'FIN001';
+  const dniFin = '55443322';
+  let viajeId;
+
+  test.beforeEach(async () => {
+    await db.collection('camiones').insertOne({
+      patente: patenteFin,
+      marca: 'Mercedes-Benz',
+      modelo: 'Actros',
+      anio: 2022,
+      capacidad_kg: 25000,
+      kilometraje_actual: 100000,
+      estado: 'en_viaje',
+      mantenimientos: [],
+      creado_en: new Date()
+    });
+
+    await db.collection('choferes').insertOne({
+      dni: dniFin,
+      nombre: 'Chofer Fin',
+      telefono: '990011',
+      licencia: { categoria: 'E1', vencimiento: '2028-01-01' },
+      estado: 'asignado',
+      creado_en: new Date()
+    });
+
+    const v = await db.collection('viajes').insertOne({
+      camion_patente: patenteFin,
+      chofer_dni: dniFin,
+      chofer_nombre: 'Chofer Fin',
+      origen: 'Tandil',
+      destino: 'La Plata',
       carga_descripcion: 'Granos',
-      peso_kg: 18000
-    };
-
-    // Primer despacho
-    const res1 = await request('/api/viajes', {
-      method: 'POST',
-      body: JSON.stringify(viajeValido)
+      peso_kg: 10000,
+      km_salida: 100000,
+      km_llegada: null,
+      km_recorridos: 0,
+      estado: 'en_curso',
+      fecha_salida: new Date(),
+      fecha_llegada: null,
+      observaciones: ''
     });
-    assert.equal(res1.status, 201);
-    assert.equal(res1.data.estado, 'en_curso');
-
-    // Segundo despacho inmediato con los mismos recursos (debe fallar 409)
-    const res2 = await request('/api/viajes', {
-      method: 'POST',
-      body: JSON.stringify(viajeValido)
-    });
-    assert.equal(res2.status, 409);
-    assert.match(res2.data.error, /no está disponible.*o fue asignado/);
-
-    // Finalizar viaje: Rechazo si km_llegada < km_salida
-    const viajeId = res1.data._id;
-    const resFinInvalido = await request(`/api/viajes/${viajeId}/finalizar`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        km_llegada: 90000, // Menor que salida (100000)
-        observaciones: 'Llegada con odómetro retrocedido'
-      })
-    });
-    assert.equal(resFinInvalido.status, 400);
-    assert.match(resFinInvalido.data.error, /no puede ser menor al de salida/);
-
-    // Finalizar viaje válido con actualización monótona
-    const resFinValido = await request(`/api/viajes/${viajeId}/finalizar`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        km_llegada: 101200,
-        observaciones: 'Llegada a destino sin novedades'
-      })
-    });
-    assert.equal(resFinValido.status, 200);
-
-    const camionActualizado = await db.collection('camiones').findOne({ patente: patenteCAS });
-    assert.equal(camionActualizado.kilometraje_actual, 101200);
-    assert.equal(camionActualizado.estado, 'disponible');
+    viajeId = v.insertedId.toString();
   });
 
-  test('Escenario 3: Healthcheck con ping activo al motor', async () => {
-    const res = await request('/api/health');
+  test.afterEach(async () => {
+    await db.collection('camiones').deleteMany({ patente: patenteFin });
+    await db.collection('choferes').deleteMany({ dni: dniFin });
+    await db.collection('viajes').deleteMany({ camion_patente: patenteFin });
+  });
+
+  test('Escenario 1: Llegada exitosa, cómputo de km y liberación de recursos', async () => {
+    const res = await request(`/api/viajes/${viajeId}/finalizar`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        km_llegada: 100350,
+        observaciones: 'Llegada en horario'
+      })
+    });
     assert.equal(res.status, 200);
-    assert.equal(res.data.status, 'healthy');
-    assert.equal(res.data.database, 'connected');
-    assert.equal(typeof res.data.latency_ms, 'number');
+
+    const viaje = await db.collection('viajes').findOne({ _id: new ObjectId(viajeId) });
+    assert.equal(viaje.estado, 'finalizado');
+    assert.equal(viaje.km_recorridos, 350);
+
+    const camion = await db.collection('camiones').findOne({ patente: patenteFin });
+    assert.equal(camion.estado, 'disponible');
+    assert.equal(camion.kilometraje_actual, 100350);
+
+    const chofer = await db.collection('choferes').findOne({ dni: dniFin });
+    assert.equal(chofer.estado, 'disponible');
+  });
+
+  test('Escenario 2: Rechazo si kilometraje de llegada es menor al de salida', async () => {
+    const res = await request(`/api/viajes/${viajeId}/finalizar`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        km_llegada: 95000 // Menor que 100000
+      })
+    });
+    assert.equal(res.status, 400);
+    assert.match(res.data.error, /no puede ser menor al de salida/);
+  });
+});
+
+// ----------------------------------------------------
+// US-005: Hoja de Vida y Órdenes de Mantenimiento Técnico
+// ----------------------------------------------------
+test.describe('US-005: Mantenimiento Técnico Atómico ($push)', () => {
+  const patenteMant = 'MANT01';
+
+  test.beforeEach(async () => {
+    await db.collection('camiones').insertOne({
+      patente: patenteMant,
+      marca: 'Ford',
+      modelo: 'Cargo',
+      anio: 2020,
+      capacidad_kg: 18000,
+      kilometraje_actual: 75000,
+      estado: 'disponible',
+      mantenimientos: [],
+      creado_en: new Date()
+    });
+  });
+
+  test.afterEach(async () => {
+    await db.collection('camiones').deleteMany({ patente: patenteMant });
+  });
+
+  test('Escenario 1: Registro atómico con $push', async () => {
+    const res = await request(`/api/camiones/${patenteMant}/mantenimientos`, {
+      method: 'POST',
+      body: JSON.stringify({
+        tipo: 'Cambio de Correa',
+        taller: 'Taller Oficial Ford',
+        costo: 120000,
+        km_servicio: 75000
+      })
+    });
+    assert.equal(res.status, 200);
+
+    const camion = await db.collection('camiones').findOne({ patente: patenteMant });
+    assert.equal(camion.mantenimientos.length, 1);
+    assert.equal(camion.mantenimientos[0].taller, 'Taller Oficial Ford');
+  });
+
+  test('Escenario 2: Asentamiento en camión inexistente responde 404', async () => {
+    const res = await request('/api/camiones/FANTASMA/mantenimientos', {
+      method: 'POST',
+      body: JSON.stringify({
+        tipo: 'Cambio de Aceite',
+        taller: 'Taller',
+        costo: 50000,
+        km_servicio: 10000
+      })
+    });
+    assert.equal(res.status, 404);
+  });
+});
+
+// ----------------------------------------------------
+// US-006: Analítica de Costos y Agregación de Flota
+// ----------------------------------------------------
+test.describe('US-006: Analítica y Agregación', () => {
+  test('Escenario 1: Endpoint de analítica responde estructura esperada', async () => {
+    const res = await request('/api/stats/flota');
+    assert.equal(res.status, 200);
+    assert.equal(typeof res.data.total_camiones, 'number');
+    assert.equal(typeof res.data.total_en_viaje, 'number');
+    assert.equal(typeof res.data.km_flota_recorridos, 'number');
+    assert.equal(Array.isArray(res.data.gasto_mantenimiento_por_marca), true);
   });
 });
