@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const { MongoClient, ObjectId } = require('mongodb');
-const { connectDB, getDB } = require('../src/config/db');
-const app = require('../server');
+const { connectDB, getDB } = require('../server/config/db');
+const app = require('../server/server');
 
 const TEST_PORT = 3100;
 const BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
