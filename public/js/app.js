@@ -22,11 +22,14 @@ export function showToast(message, type = 'success') {
   }, 3200);
 }
 
+let lastFocusedElement = null;
+
 export function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
+    lastFocusedElement = document.activeElement;
     modal.classList.add('active');
-    const firstInput = modal.querySelector('input:not([type="hidden"]), select');
+    const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea, button');
     if (firstInput) firstInput.focus();
   }
 }
@@ -35,6 +38,9 @@ export function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.remove('active');
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
   }
 }
 
