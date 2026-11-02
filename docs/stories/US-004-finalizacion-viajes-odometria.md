@@ -1,28 +1,41 @@
-# US-004: Finalización de Viajes y Cómputo de Odometría
+# US-004: Finalización de Viajes y Odometría Monótona
 
-**Como** Supervisor de Recepción y Control de Flota  
-**Quiero** asentar la llegada de un viaje con el odómetro final del vehículo  
-**Para** computar los kilómetros recorridos reales, actualizar el odómetro del camión y liberar los recursos.
+**Como** Supervisor de Tráfico y Liquidaciones  
+**Quiero** registrar la llegada de un camión, asentando el kilometraje final y liberando recursos  
+**Para** computar la distancia real recorrida y asegurar que el odómetro del vehículo solo aumente monótonamente mediante el operador `$max` de MongoDB.
+
+---
+
+## 🛠️ Especificación de Capacidades MongoDB en Juego
+1. **Operador Atómico Monótono (`$max`):**
+   - En sistemas de flotas, un error de reporte no debe poder retroceder el kilometraje real de la unidad.
+   - MongoDB provee la mutación atómica:
+     ```javascript
+     db.collection('camiones').updateOne(
+       { patente: viaje.camion_patente },
+       {
+         $set: { estado: 'disponible' },
+         $max: { kilometraje_actual: kmFin }
+       }
+     )
+     ```
+   - Si `kmFin` fuese inferior al kilometraje registrado, el operador `$max` retiene el valor superior de forma transparente.
+2. **Identificador Canónico `ObjectId`:**
+   - La búsqueda y actualización del viaje se ejecuta mediante el identificador nativo `_id: new ObjectId(id)`.
 
 ---
 
 ## Criterios de Aceptación (BDD)
 
-### Escenario 1: Llegada Exitosa y Liberación de Recursos
-- **Given** un viaje en estado `en_curso` con odómetro de salida 100,000 km
-- **When** se envía `PUT /api/viajes/{id}/finalizar` con `km_llegada: 101200`
+### Escenario 1: Llegada Exitosa y Actualización con `$max`
+- **Given** un viaje en estado `en_curso` con `km_salida: 80000`
+- **When** se envía `PUT /api/viajes/{id}/finalizar` con `km_llegada: 80450`
 - **Then** responde HTTP `200 OK`
-- **And** computa `km_recorridos: 1200` y transiciona el viaje a `finalizado`
-- **And** actualiza el camión con `kilometraje_actual: 101200` y estado `disponible`
-- **And** libera al chofer con estado `disponible`.
+- **And** persiste el viaje con `estado: "finalizado"` y `km_recorridos: 450`
+- **And** actualiza el camión a `estado: "disponible"` con `kilometraje_actual: 80450` vía `$max`
+- **And** libera al chofer a `estado: "disponible"`.
 
-### Escenario 2: Rechazo por Retroceso Fraudulento de Odómetro
-- **Given** un viaje con odómetro de salida 100,000 km
-- **When** se envía `PUT /api/viajes/{id}/finalizar` con `km_llegada: 98000` (menor a la salida)
-- **Then** responde HTTP `400 Bad Request`
-- **And** no altera el viaje ni los estados de los recursos.
-
-### Escenario 3: Finalización de Viaje Inexistente
-- **Given** un identificador de viaje que no existe en MongoDB
-- **When** se envía `PUT /api/viajes/000000000000000000000000/finalizar`
-- **Then** responde HTTP `404 Not Found`.
+### Escenario 2: Rechazo por Kilometraje Incoherente
+- **Given** un viaje con `km_salida: 80000`
+- **When** se intenta finalizar con `km_llegada: 79000`
+- **Then** la API responde HTTP `400 Bad Request` indicando que el odómetro de llegada no puede ser menor al de salida.
