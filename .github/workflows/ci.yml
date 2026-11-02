@@ -58,7 +58,7 @@ jobs:
 
       - name: Start Backend Server
         run: |
-          node server.js &
+          node server/server.js &
           sleep 3
 
       - name: Run MongoDB Direct Integration Tests

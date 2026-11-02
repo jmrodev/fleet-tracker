@@ -1,18 +1,19 @@
 const express = require('express');
 const path = require('path');
-const { connectDB } = require('./src/config/db');
+const { connectDB } = require('./config/db');
 
-const healthRoutes = require('./src/routes/health.routes');
-const camionesRoutes = require('./src/routes/camiones.routes');
-const choferesRoutes = require('./src/routes/choferes.routes');
-const viajesRoutes = require('./src/routes/viajes.routes');
-const statsRoutes = require('./src/routes/stats.routes');
+const healthRoutes = require('./routes/health.routes');
+const camionesRoutes = require('./routes/camiones.routes');
+const choferesRoutes = require('./routes/choferes.routes');
+const viajesRoutes = require('./routes/viajes.routes');
+const statsRoutes = require('./routes/stats.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Servir cliente desacoplado desde client/
+app.use(express.static(path.join(__dirname, '..', 'client')));
 
 // Registro modular de rutas
 app.use('/api', healthRoutes);
