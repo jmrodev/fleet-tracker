@@ -1,4 +1,4 @@
-// public/js/icons.js - Set coherente de iconos SVG monocromáticos para Modo Operate
+// client/js/icons.js - Set coherente de iconos SVG monocromáticos para Modo Operate
 export const icons = {
   truck: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17h4V5H2v12h3m5 0a2 2 0 1 0 4 0m-9 0a2 2 0 1 0 4 0m9-5h4l3 3v4h-3m-4 0a2 2 0 1 0 4 0"/></svg>`,
   route: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>`,

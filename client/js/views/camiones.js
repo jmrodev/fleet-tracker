@@ -1,4 +1,4 @@
-// public/js/views/camiones.js - Vista dedicada de Camiones & Mantenimiento (Harden + Filtros + Modal Edición)
+// client/js/views/camiones.js - Vista dedicada de Camiones & Mantenimiento (Harden + Filtros + Modal Edición)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 import { openModal, closeModal, showToast, confirmAction } from '../app.js';

@@ -1,4 +1,4 @@
-// public/js/views/stats.js - Vista Analítica del Aggregation Pipeline
+// client/js/views/stats.js - Vista Analítica del Aggregation Pipeline
 import { api } from '../api.js';
 
 export async function renderStats() {

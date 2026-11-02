@@ -1,4 +1,4 @@
-// public/js/views/viajes.js - Vista de Despacho y Seguimiento de Viajes (Harden + Modales + Toasts)
+// client/js/views/viajes.js - Vista de Despacho y Seguimiento de Viajes (Harden + Modales + Toasts)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 import { openModal, closeModal, showToast } from '../app.js';

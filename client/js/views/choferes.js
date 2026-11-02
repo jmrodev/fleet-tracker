@@ -1,4 +1,4 @@
-// public/js/views/choferes.js - Vista dedicada e independiente de Choferes (Harden + Filtros + Modal Edición)
+// client/js/views/choferes.js - Vista dedicada e independiente de Choferes (Harden + Filtros + Modal Edición)
 import { api } from '../api.js';
 import { renderKPIs } from './kpis.js';
 import { openModal, closeModal, showToast, confirmAction } from '../app.js';
