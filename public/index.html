@@ -274,37 +274,37 @@
   <!-- ========================================== -->
 
   <!-- 1. Modal Despacho de Viaje -->
-  <div id="modal-viaje" class="modal-backdrop">
+  <div id="modal-viaje" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-viaje-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Despachar Nuevo Viaje</h3>
-        <button class="modal-close" data-close="modal-viaje">&times;</button>
+        <h3 id="modal-viaje-title">Despachar Nuevo Viaje</h3>
+        <button class="modal-close" data-close="modal-viaje" aria-label="Cerrar modal">&times;</button>
       </div>
       <form id="form-viaje">
-        <label>Camión Disponible:</label>
+        <label for="viaje-camion">Camión Disponible:</label>
         <select id="viaje-camion" required></select>
 
-        <label>Chofer Disponible:</label>
+        <label for="viaje-chofer">Chofer Disponible:</label>
         <select id="viaje-chofer" required></select>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label>Origen:</label>
+            <label for="viaje-origen">Origen:</label>
             <input type="text" id="viaje-origen" placeholder="ej: Tandil" required>
           </div>
           <div>
-            <label>Destino:</label>
+            <label for="viaje-destino">Destino:</label>
             <input type="text" id="viaje-destino" placeholder="ej: Rosario" required>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
           <div>
-            <label>Descripción Carga:</label>
+            <label for="viaje-carga">Descripción Carga:</label>
             <input type="text" id="viaje-carga" placeholder="ej: Granos de Soja" required>
           </div>
           <div>
-            <label>Peso (Kg):</label>
+            <label for="viaje-peso">Peso (Kg):</label>
             <input type="number" id="viaje-peso" placeholder="ej: 28000" required>
           </div>
         </div>
@@ -319,44 +319,44 @@
   </div>
 
   <!-- 2. Modal Nuevo Camión -->
-  <div id="modal-camion" class="modal-backdrop">
+  <div id="modal-camion" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-camion-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Registrar Nuevo Camión en Flota</h3>
-        <button class="modal-close" data-close="modal-camion">&times;</button>
+        <h3 id="modal-camion-title">Registrar Nuevo Camión en Flota</h3>
+        <button class="modal-close" data-close="modal-camion" aria-label="Cerrar modal">&times;</button>
       </div>
       <form id="form-camion">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label>Patente:</label>
+            <label for="camion-patente">Patente:</label>
             <input type="text" id="camion-patente" placeholder="ej: AG999ZZ" required>
           </div>
           <div>
-            <label>Marca:</label>
+            <label for="camion-marca">Marca:</label>
             <input type="text" id="camion-marca" placeholder="ej: Scania" required>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
           <div>
-            <label>Modelo:</label>
+            <label for="camion-modelo">Modelo:</label>
             <input type="text" id="camion-modelo" placeholder="ej: R500 V8" required>
           </div>
           <div>
-            <label>Año:</label>
+            <label for="camion-anio">Año:</label>
             <input type="number" id="camion-anio" value="2024" required>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label>Capacidad (Kg):</label>
+            <label for="camion-capacidad">Capacidad (Kg):</label>
             <input type="number" id="camion-capacidad" placeholder="ej: 28000" required>
           </div>
           <div>
-            <label>Odómetro Inicial (Km):</label>
+            <label for="camion-km">Odómetro Inicial (Km):</label>
             <input type="number" id="camion-km" placeholder="ej: 120000">
           </div>
         </div>
-        <label>URL / Ruta Foto:</label>
+        <label for="camion-foto">URL / Ruta Foto:</label>
         <input type="text" id="camion-foto" placeholder="ej: /images/camiones/scania.jpg">
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
@@ -369,31 +369,31 @@
   </div>
 
   <!-- 3. Modal Asentar Mantenimiento -->
-  <div id="modal-mant" class="modal-backdrop">
+  <div id="modal-mant" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-mant-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Asentar Mantenimiento Preventivo ($push)</h3>
-        <button class="modal-close" data-close="modal-mant">&times;</button>
+        <h3 id="modal-mant-title">Asentar Mantenimiento Preventivo ($push)</h3>
+        <button class="modal-close" data-close="modal-mant" aria-label="Cerrar modal">&times;</button>
       </div>
       <form id="form-mant">
-        <label>Unidad a intervenir:</label>
+        <label for="mant-camion">Unidad a intervenir:</label>
         <select id="mant-camion" required></select>
 
-        <label>Tipo de Intervención:</label>
+        <label for="mant-tipo">Tipo de Intervención:</label>
         <input type="text" id="mant-tipo" placeholder="ej: Cambio de aceite sintético y filtros" required>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label>Costo ($):</label>
+            <label for="mant-costo">Costo ($):</label>
             <input type="number" id="mant-costo" placeholder="ej: 250000" required>
           </div>
           <div>
-            <label>Km al momento del servicio:</label>
+            <label for="mant-km">Km al momento del servicio:</label>
             <input type="number" id="mant-km" placeholder="ej: 145000" required>
           </div>
         </div>
 
-        <label>Taller / Concesionario:</label>
+        <label for="mant-taller">Taller / Concesionario:</label>
         <input type="text" id="mant-taller" placeholder="ej: Scania Oficial Tandil">
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
@@ -406,36 +406,36 @@
   </div>
 
   <!-- 4. Modal Nuevo Chofer -->
-  <div id="modal-chofer" class="modal-backdrop">
+  <div id="modal-chofer" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-chofer-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Registrar Nuevo Chofer en Nómina</h3>
-        <button class="modal-close" data-close="modal-chofer">&times;</button>
+        <h3 id="modal-chofer-title">Registrar Nuevo Chofer en Nómina</h3>
+        <button class="modal-close" data-close="modal-chofer" aria-label="Cerrar modal">&times;</button>
       </div>
       <form id="form-chofer">
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
           <div>
-            <label>DNI:</label>
+            <label for="chofer-dni">DNI:</label>
             <input type="text" id="chofer-dni" placeholder="ej: 38123456" required>
           </div>
           <div>
-            <label>Nombre y Apellido:</label>
+            <label for="chofer-nombre">Nombre y Apellido:</label>
             <input type="text" id="chofer-nombre" placeholder="ej: Horacio Molina" required>
           </div>
         </div>
-        <label>Teléfono:</label>
+        <label for="chofer-tel">Teléfono:</label>
         <input type="text" id="chofer-tel" placeholder="ej: +54 249 455-1234" required>
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
           <div>
-            <label>Categoría Licencia:</label>
+            <label for="chofer-lic-cat">Categoría Licencia:</label>
             <input type="text" id="chofer-lic-cat" value="E1" required>
           </div>
           <div>
-            <label>Fecha Vencimiento:</label>
+            <label for="chofer-lic-venc">Fecha Vencimiento:</label>
             <input type="date" id="chofer-lic-venc" required>
           </div>
         </div>
-        <label>URL / Ruta Foto:</label>
+        <label for="chofer-foto">URL / Ruta Foto:</label>
         <input type="text" id="chofer-foto" placeholder="ej: /images/choferes/horacio.jpg">
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
@@ -448,14 +448,14 @@
   </div>
 
   <!-- 5. Modal Historial de Mantenimientos Embebidos -->
-  <div id="modal-historial-mant" class="modal-backdrop">
+  <div id="modal-historial-mant" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-historial-titulo">
     <div class="modal-card" style="max-width: 680px;">
       <div class="modal-header">
         <div>
           <h3 id="modal-historial-titulo" style="margin: 0;">Historial de Mantenimientos</h3>
           <p id="modal-historial-subtitulo" style="color: var(--text-muted); font-size: 12px; margin: 4px 0 0 0;"></p>
         </div>
-        <button class="modal-close" data-close="modal-historial-mant">&times;</button>
+        <button class="modal-close" data-close="modal-historial-mant" aria-label="Cerrar modal">&times;</button>
       </div>
       <div id="modal-historial-content" style="max-height: 60vh; overflow-y: auto;">
         <!-- Se inyecta dinámicamente -->
@@ -468,18 +468,18 @@
   </div>
 
   <!-- 6. Modal Editar Camión (Harden / No más prompt()) -->
-  <div id="modal-editar-camion" class="modal-backdrop">
+  <div id="modal-editar-camion" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-edit-camion-title">
     <div class="modal-card" style="max-width: 480px;">
       <div class="modal-header">
         <h3 id="modal-edit-camion-title">Actualizar Camión</h3>
-        <button class="modal-close" data-close="modal-editar-camion">&times;</button>
+        <button class="modal-close" data-close="modal-editar-camion" aria-label="Cerrar modal">&times;</button>
       </div>
       <form id="form-editar-camion">
         <input type="hidden" id="edit-camion-patente">
-        <label>Odómetro Actual (km):</label>
+        <label for="edit-camion-km">Odómetro Actual (km):</label>
         <input type="number" id="edit-camion-km" min="0" required>
 
-        <label>Estado Operativo:</label>
+        <label for="edit-camion-estado">Estado Operativo:</label>
         <select id="edit-camion-estado" required>
           <option value="disponible">Disponible</option>
           <option value="en_mantenimiento">En Mantenimiento</option>
@@ -496,18 +496,18 @@
   </div>
 
   <!-- 7. Modal Editar Chofer (Harden / No más prompt()) -->
-  <div id="modal-editar-chofer" class="modal-backdrop">
+  <div id="modal-editar-chofer" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-edit-chofer-title">
     <div class="modal-card" style="max-width: 480px;">
       <div class="modal-header">
         <h3 id="modal-edit-chofer-title">Actualizar Chofer</h3>
-        <button class="modal-close" data-close="modal-editar-chofer">&times;</button>
+        <button class="modal-close" data-close="modal-editar-chofer" aria-label="Cerrar modal">&times;</button>
       </div>
       <form id="form-editar-chofer">
         <input type="hidden" id="edit-chofer-dni">
-        <label>Teléfono de Contacto:</label>
+        <label for="edit-chofer-tel">Teléfono de Contacto:</label>
         <input type="text" id="edit-chofer-tel" required>
 
-        <label>Estado en Nómina:</label>
+        <label for="edit-chofer-estado">Estado en Nómina:</label>
         <select id="edit-chofer-estado" required>
           <option value="disponible">Disponible</option>
           <option value="asignado">Asignado</option>
@@ -524,18 +524,18 @@
   </div>
 
   <!-- 8. Modal Finalizar Viaje (Harden / No más prompt()) -->
-  <div id="modal-finalizar-viaje" class="modal-backdrop">
+  <div id="modal-finalizar-viaje" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-fin-viaje-title">
     <div class="modal-card" style="max-width: 480px;">
       <div class="modal-header">
         <h3 id="modal-fin-viaje-title">Asentar Llegada de Viaje</h3>
-        <button class="modal-close" data-close="modal-finalizar-viaje">&times;</button>
+        <button class="modal-close" data-close="modal-finalizar-viaje" aria-label="Cerrar modal">&times;</button>
       </div>
       <form id="form-finalizar-viaje">
         <input type="hidden" id="fin-viaje-id">
-        <label>Odómetro de Llegada (km):</label>
+        <label for="fin-viaje-km">Odómetro de Llegada (km):</label>
         <input type="number" id="fin-viaje-km" min="0" required>
 
-        <label>Observaciones de Entrega:</label>
+        <label for="fin-viaje-obs">Observaciones de Entrega:</label>
         <input type="text" id="fin-viaje-obs" value="Entrega en conformidad.">
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
@@ -548,11 +548,11 @@
   </div>
 
   <!-- 9. Modal Confirmación de Eliminación (Harden / No más confirm()) -->
-  <div id="modal-confirm-delete" class="modal-backdrop">
+  <div id="modal-confirm-delete" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-delete-title">
     <div class="modal-card" style="max-width: 440px;">
       <div class="modal-header">
         <h3 id="modal-confirm-delete-title" style="color: var(--red-danger);">Confirmar Eliminación</h3>
-        <button class="modal-close" data-close="modal-confirm-delete">&times;</button>
+        <button class="modal-close" data-close="modal-confirm-delete" aria-label="Cerrar modal">&times;</button>
       </div>
       <p id="modal-confirm-delete-text" style="color: var(--text-primary); font-size: 13px; margin: 0 0 16px 0;"></p>
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
