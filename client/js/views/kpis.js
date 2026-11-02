@@ -1,4 +1,4 @@
-// public/js/views/kpis.js - Vista de Indicadores Clave
+// client/js/views/kpis.js - Vista de Indicadores Clave
 import { api } from '../api.js';
 
 export async function renderKPIs() {

@@ -1,4 +1,4 @@
-// public/js/app.js - Orquestador y Gestión de Vistas, Modales y Toasts
+// client/js/app.js - Orquestador y Gestión de Vistas, Modales y Toasts
 import { renderKPIs } from './views/kpis.js';
 import { initViajesView, renderViajes } from './views/viajes.js';
 import { initCamionesView, renderCamiones } from './views/camiones.js';

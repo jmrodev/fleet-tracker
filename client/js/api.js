@@ -1,4 +1,4 @@
-// public/js/api.js - Cliente HTTP desacoplado
+// client/js/api.js - Cliente HTTP desacoplado
 export const api = {
   async getHealth() {
     const res = await fetch('/api/health');
