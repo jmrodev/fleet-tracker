@@ -65,17 +65,54 @@ router.get('/:dni', async (req, res) => {
   }
 });
 
-// 3. Registrar nuevo chofer (Create)
+// 3. Registrar nuevo chofer (Create con validaciones TDD granulares)
 router.post('/', async (req, res) => {
   try {
     const db = getDB();
     const { dni, nombre, telefono, licencia, foto_url } = req.body;
-    if (!dni || !nombre || !telefono || !licencia || !licencia.categoria || !licencia.vencimiento) {
-      return res.status(400).json({ error: 'DNI, nombre, teléfono, licencia.categoria y licencia.vencimiento son obligatorios' });
+
+    // Paso 2: Presencia obligatoria de DNI
+    if (!dni) {
+      return res.status(400).json({ error: 'El DNI es obligatorio' });
+    }
+
+    const dniStr = String(dni).trim();
+
+    // Paso 3: DNI solo números
+    if (!/^\d+$/.test(dniStr)) {
+      return res.status(400).json({ error: 'El DNI debe contener únicamente números' });
+    }
+
+    // Paso 4: DNI longitud mínima (7 cifras)
+    if (dniStr.length < 7) {
+      return res.status(400).json({ error: 'El DNI no puede tener menos de 7 dígitos' });
+    }
+
+    // Paso 5: DNI longitud máxima (8 cifras)
+    if (dniStr.length > 8) {
+      return res.status(400).json({ error: 'El DNI no puede tener más de 8 dígitos' });
+    }
+
+    // Paso 6: Presencia y longitud de Nombre (mínimo 3 caracteres)
+    if (!nombre || String(nombre).trim().length < 3) {
+      return res.status(400).json({ error: 'El nombre es obligatorio y debe tener al menos 3 caracteres' });
+    }
+
+    // Paso 7: Presencia y longitud de Teléfono (mínimo 6 caracteres)
+    if (!telefono || String(telefono).trim().length < 6) {
+      return res.status(400).json({ error: 'El teléfono es obligatorio y debe tener al menos 6 caracteres' });
+    }
+
+    // Paso 8: Estructura estricta de Licencia
+    if (!licencia || !licencia.categoria) {
+      return res.status(400).json({ error: 'licencia.categoria es obligatorio' });
+    }
+    if (!licencia.vencimiento) {
+      return res.status(400).json({ error: 'licencia.vencimiento es obligatorio' });
     }
 
     const doc = {
-      dni: String(dni).trim(),
+      dni: dniStr,
       nombre: String(nombre).trim(),
       telefono: String(telefono).trim(),
       licencia: {
