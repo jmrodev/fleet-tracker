@@ -5,7 +5,7 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "test": "node tests/integration.test.js && node --test tests/stories.test.js"
+    "test": "node tests/integration.test.js && node --test tests/stories.test.js && hurl --test --jobs 1 tests/hurl/*.hurl --variables-file tests/hurl/env.local"
   },
   "dependencies": {
     "express": "^4.19.2",
