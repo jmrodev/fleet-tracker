@@ -16,8 +16,14 @@ export async function renderStats() {
     }
 
     // Calcular totales globales para el reporte
-    const totalGastoGlobal = data.gasto_mantenimiento_por_marca.reduce((acc, curr) => acc + (curr.total_gastado || 0), 0);
-    const totalServiciosGlobal = data.gasto_mantenimiento_por_marca.reduce((acc, curr) => acc + (curr.servicios || 0), 0);
+    const totalGastoGlobal = data.gasto_mantenimiento_por_marca.reduce((acc, curr) => {
+      const gasto = typeof curr.total_gastado === 'number' ? curr.total_gastado : 0;
+      return acc + gasto;
+    }, 0);
+    const totalServiciosGlobal = data.gasto_mantenimiento_por_marca.reduce((acc, curr) => {
+      const serv = typeof curr.servicios === 'number' ? curr.servicios : 0;
+      return acc + serv;
+    }, 0);
     const promedioGeneral = totalServiciosGlobal > 0 ? Math.round(totalGastoGlobal / totalServiciosGlobal) : 0;
 
     // Tabla Resumen para Dashboard

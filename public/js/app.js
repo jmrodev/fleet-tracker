@@ -44,14 +44,14 @@ export function closeModal(modalId) {
   }
 }
 
-export function confirmAction({ title, message, confirmText = 'Confirmar y Eliminar', onConfirm }) {
+export function confirmAction({ title = 'Confirmar Acción', message = '¿Está seguro de continuar?', confirmText = 'Confirmar y Eliminar', onConfirm }) {
   const modal = document.getElementById('modal-confirm-delete');
   const titleEl = document.getElementById('modal-confirm-delete-title');
   const textEl = document.getElementById('modal-confirm-delete-text');
   const actionBtn = document.getElementById('btn-confirm-delete-action');
 
-  if (titleEl) titleEl.textContent = title || 'Confirmar Acción';
-  if (textEl) textEl.textContent = message || '¿Está seguro de continuar?';
+  if (titleEl) titleEl.textContent = title;
+  if (textEl) textEl.textContent = message;
   if (actionBtn) {
     actionBtn.textContent = confirmText;
     actionBtn.onclick = async () => {

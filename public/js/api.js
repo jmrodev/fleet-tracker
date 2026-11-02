@@ -15,7 +15,10 @@ export const api = {
   async getCamion(patente) {
     const res = await fetch(`/api/camiones/${encodeURIComponent(patente)}`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al obtener camión');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al obtener camión`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -26,7 +29,10 @@ export const api = {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al registrar camión');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al registrar camión`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -37,7 +43,10 @@ export const api = {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al actualizar camión');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al actualizar camión`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -46,7 +55,10 @@ export const api = {
       method: 'DELETE'
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al eliminar camión');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al eliminar camión`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -57,7 +69,10 @@ export const api = {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al asentar mantenimiento');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al asentar mantenimiento`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -71,7 +86,10 @@ export const api = {
   async getChofer(dni) {
     const res = await fetch(`/api/choferes/${encodeURIComponent(dni)}`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al obtener chofer');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al obtener chofer`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -82,7 +100,10 @@ export const api = {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al registrar chofer');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al registrar chofer`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -93,7 +114,10 @@ export const api = {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al actualizar chofer');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al actualizar chofer`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -102,7 +126,10 @@ export const api = {
       method: 'DELETE'
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al eliminar chofer');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al eliminar chofer`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -120,7 +147,10 @@ export const api = {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al despachar viaje');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al despachar viaje`;
+      throw new Error(msg);
+    }
     return data;
   },
 
@@ -131,7 +161,10 @@ export const api = {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al finalizar viaje');
+    if (!res.ok) {
+      const msg = data && data.error ? data.error : `HTTP ${res.status}: Error al finalizar viaje`;
+      throw new Error(msg);
+    }
     return data;
   },
 

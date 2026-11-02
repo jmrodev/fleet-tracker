@@ -20,8 +20,23 @@ router.get('/', async (req, res) => {
       }
       filter.estado = estadoSanitizado;
     }
-    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
-    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    let limit = 50;
+    if (req.query.limit !== undefined) {
+      const parsedLimit = Number(req.query.limit);
+      if (isNaN(parsedLimit) || parsedLimit < 1) {
+        return res.status(400).json({ error: "El parámetro 'limit' debe ser un número entero positivo" });
+      }
+      limit = Math.min(parsedLimit, 100);
+    }
+
+    let skip = 0;
+    if (req.query.skip !== undefined) {
+      const parsedSkip = Number(req.query.skip);
+      if (isNaN(parsedSkip) || parsedSkip < 0) {
+        return res.status(400).json({ error: "El parámetro 'skip' debe ser un número mayor o igual a 0" });
+      }
+      skip = parsedSkip;
+    }
 
     const viajes = await db.collection('viajes')
       .find(filter)
@@ -88,7 +103,16 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const salidaKm = Number(km_salida || camionReservado.kilometraje_actual || 0);
+    const salidaKm = km_salida !== undefined && km_salida !== null
+      ? Number(km_salida)
+      : Number(camionReservado.kilometraje_actual);
+
+    if (isNaN(salidaKm) || salidaKm < 0) {
+      // Rollback de reservas en caso de odómetro inválido
+      await db.collection('camiones').updateOne({ patente: patenteUpper }, { $set: { estado: 'disponible' } });
+      await db.collection('choferes').updateOne({ dni: dniStr }, { $set: { estado: 'disponible' } });
+      return res.status(400).json({ error: 'km_salida debe ser un número válido mayor o igual a 0' });
+    }
 
     const docViaje = {
       camion_patente: camionReservado.patente,
@@ -153,7 +177,7 @@ router.put('/:id/finalizar', async (req, res) => {
           km_llegada: kmFin,
           km_recorridos: kmRecorridos,
           fecha_llegada: new Date(),
-          observaciones: String(observaciones || '')
+          observaciones: observaciones !== undefined && observaciones !== null ? String(observaciones).trim() : ''
         }
       }
     );
